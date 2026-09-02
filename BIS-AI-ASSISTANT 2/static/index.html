@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BIS Sahayak — Indian Standards & Compliance AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans flex flex-col h-screen overflow-hidden">
+
+  <!-- Header -->
+  <header class="bg-[#003366] text-white px-6 py-4 shadow-md flex justify-between items-center z-10">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center font-bold text-slate-900 shadow">
+        BIS
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-wide flex items-center gap-2">
+          BIS Sahayak AI
+        </h1>
+        <p class="text-xs text-blue-200">Indian Standards, Hallmarking & Certification Assistant</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button onclick="clearChat()" class="text-xs bg-blue-900 hover:bg-blue-800 text-white px-3 py-1.5 rounded-lg border border-blue-700 transition">
+        <i class="fa-solid fa-plus mr-1"></i> New Consultation
+      </button>
+    </div>
+  </header>
+
+  <!-- Quick Topic Chips -->
+  <div class="bg-white border-b border-slate-200 px-6 py-2.5 flex items-center space-x-2 overflow-x-auto text-xs">
+    <span class="text-slate-400 font-medium whitespace-nowrap"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i> Quick Topics:</span>
+    <button onclick="sendQuickPrompt('How do I verify a 6-digit HUID for gold jewellery?')" class="bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap transition">🏅 Gold 6-digit HUID</button>
+    <button onclick="sendQuickPrompt('What is the difference between ISI Mark (Scheme I) and CRS (Scheme II)?')" class="bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap transition">📜 ISI vs CRS</button>
+    <button onclick="sendQuickPrompt('What are the permissible limits for pH and TDS in Drinking Water under IS 10500?')" class="bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap transition">💧 IS 10500 Water</button>
+    <button onclick="sendQuickPrompt('Is ISI mark mandatory for two-wheeler helmets under IS 4151?')" class="bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 px-3 py-1 rounded-full border border-slate-200 whitespace-nowrap transition">🪖 Helmet IS 4151</button>
+  </div>
+
+  <!-- Chat Log Area -->
+  <main id="chatLog" class="flex-1 overflow-y-auto p-6 space-y-4 max-w-4xl w-full mx-auto">
+    <!-- Initial welcome message -->
+    <div class="flex items-start space-x-3">
+      <div class="w-8 h-8 rounded-full bg-[#003366] text-white flex items-center justify-center text-xs flex-shrink-0 mt-1 shadow">
+        <i class="fa-solid fa-robot"></i>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm text-sm text-slate-700 max-w-2xl">
+        <p class="font-semibold text-blue-900 mb-1">Namaste! Welcome to BIS Sahayak</p>
+        <p>I am your authoritative compliance and standards assistant. Ask me anything about <strong>Indian Standards (IS codes)</strong>, <strong>ISI mark licensing</strong>, <strong>Compulsory Registration Scheme (CRS)</strong>, or <strong>6-digit HUID Gold Hallmarking</strong>.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Input Bar -->
+  <footer class="bg-white border-t border-slate-200 p-4">
+    <div class="max-w-4xl mx-auto flex items-center space-x-2">
+      <input 
+        id="userInput" 
+        type="text" 
+        placeholder="Ask anything about BIS, IS standards, labs, or consumer rights..." 
+        class="flex-1 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent bg-slate-50"
+        onkeydown="if(event.key === 'Enter') handleSend()"
+      />
+      <button 
+        id="sendBtn" 
+        onclick="handleSend()" 
+        class="bg-[#003366] hover:bg-blue-800 text-white font-medium px-5 py-3 rounded-xl transition flex items-center space-x-1.5 shadow"
+      >
+        <span>Send</span>
+        <i class="fa-solid fa-paper-plane text-xs"></i>
+      </button>
+    </div>
+  </footer>
+
+  <script>
+    const conversationHistory = [];
+    const chatLog = document.getElementById('chatLog');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    function renderUserMessage(text) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'flex justify-end';
+      msgDiv.innerHTML = `
+        <div class="bg-[#003366] text-white rounded-2xl rounded-tr-none px-4 py-3 text-sm max-w-xl shadow-sm leading-relaxed">
+          ${text}
+        </div>
+      `;
+      chatLog.appendChild(msgDiv);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function renderBotMessage(markdownText) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'flex items-start space-x-3';
+      const parsedHtml = marked.parse(markdownText);
+      
+      msgDiv.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-[#003366] text-white flex items-center justify-center text-xs flex-shrink-0 mt-1 shadow">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm text-sm text-slate-800 max-w-2xl prose prose-sm leading-relaxed">
+          ${parsedHtml}
+        </div>
+      `;
+      chatLog.appendChild(msgDiv);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function renderThinking() {
+      const id = 'thinking-' + Date.now();
+      const msgDiv = document.createElement('div');
+      msgDiv.id = id;
+      msgDiv.className = 'flex items-start space-x-3';
+      msgDiv.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-[#003366] text-white flex items-center justify-center text-xs flex-shrink-0 mt-1">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm text-xs text-slate-500 flex items-center space-x-2">
+          <i class="fa-solid fa-circle-notch fa-spin text-blue-700"></i>
+          <span>Consulting Indian Standards repository...</span>
+        </div>
+      `;
+      chatLog.appendChild(msgDiv);
+      chatLog.scrollTop = chatLog.scrollHeight;
+      return id;
+    }
+
+    async function handleSend() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      renderUserMessage(text);
+      userInput.value = '';
+      userInput.disabled = true;
+      sendBtn.disabled = true;
+
+      const thinkingId = renderThinking();
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history: conversationHistory
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById(thinkingId)?.remove();
+
+        if (data.success) {
+          renderBotMessage(data.reply);
+          conversationHistory.push({ role: 'user', text: text });
+          conversationHistory.push({ role: 'model', text: data.reply });
+        } else {
+          renderBotMessage('⚠️ **Error**: ' + (data.detail || 'Could not generate answer.'));
+        }
+      } catch (err) {
+        document.getElementById(thinkingId)?.remove();
+        renderBotMessage('⚠️ **Network Error**: Unable to reach backend server.');
+      } finally {
+        userInput.disabled = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+      }
+    }
+
+    function sendQuickPrompt(prompt) {
+      userInput.value = prompt;
+      handleSend();
+    }
+
+    function clearChat() {
+      conversationHistory.length = 0;
+      chatLog.innerHTML = `
+        <div class="flex items-start space-x-3">
+          <div class="w-8 h-8 rounded-full bg-[#003366] text-white flex items-center justify-center text-xs flex-shrink-0 mt-1 shadow">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm text-sm text-slate-700 max-w-2xl">
+            <p class="font-semibold text-blue-900 mb-1">New Consultation Started</p>
+            <p>What Indian Standard, certification scheme, or testing clause can I help you with?</p>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
