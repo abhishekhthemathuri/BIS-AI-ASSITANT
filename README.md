@@ -37,6 +37,3 @@ Navigating the Bureau of Indian Standards (BIS) ecosystem can be challenging:
    - Modern, mobile-responsive layout styled with Tailwind CSS, quick-access topic chips, and real-time Markdown rendering.
 
 ---
-
-
-└─────────────┘
