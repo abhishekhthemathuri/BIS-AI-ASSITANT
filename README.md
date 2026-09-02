@@ -38,28 +38,5 @@ Navigating the Bureau of Indian Standards (BIS) ecosystem can be challenging:
 
 ---
 
-## 🏗️ System Architecture
-┌─────────────────────────────────────────────────────────────┐
-│ Client Frontend │
-│ (HTML5 / Tailwind CSS / Vanilla JS / Marked.js) │
-└──────────────────────────────┬──────────────────────────────┘
-│ HTTP POST /api/chat
-▼
-┌─────────────────────────────────────────────────────────────┐
-│ FastAPI Python Backend │
-│ (main.py) │
-└──────────────┬───────────────────────────────┬──────────────┘
-│ │
-▼ ▼
-┌──────────────────────────────┐ ┌────────────────────────────┐
-│ Local Domain Knowledge │ │ Google GenAI SDK Client │
-│ (RAG Retrieval Engine) │ │ (Gemini 3.6 / 3.7 Flash) │
-│ - Indian Standards (IS) │ └─────────────┬──────────────┘
-│ - Clause Limits & QCOs │ │
-│ - Scheme I, II & FMCS │ │ Grounded Prompt
-│ - BIS Regional Labs │ │ & System Instruction
-└──────────────┬───────────────┘ │
-│ Context Tokens ▼
-└──────────────────────> ┌─────────────┐
-│ Gemini LLM │
+
 └─────────────┘
