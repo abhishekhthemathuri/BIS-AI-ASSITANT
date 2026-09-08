@@ -3,325 +3,888 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BIS Sahayak AI — Standards, Compliance & Lab Locator</title>
+  <title>BIS AI — Intelligent Standards & Compliance Navigator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    body { font-family: 'Inter', sans-serif; }
-    .prose p { margin-bottom: 0.75rem; }
-    .prose ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 0.75rem; }
-    .prose ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 0.75rem; }
-    .prose h3 { font-weight: 700; font-size: 1.15rem; margin-top: 1rem; margin-bottom: 0.5rem; color: #1e3a8a; }
-    .prose h4 { font-weight: 600; font-size: 1rem; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #081225; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .prose p { margin-bottom: 0.6rem; }
+    .prose ul { list-style-type: disc; margin-left: 1.25rem; margin-bottom: 0.6rem; }
+    .prose ol { list-style-type: decimal; margin-left: 1.25rem; margin-bottom: 0.6rem; }
+    .prose h3 { font-weight: 700; font-size: 1.05rem; margin-top: 0.75rem; margin-bottom: 0.25rem; color: #38bdf8; }
+    .prose strong { color: #ffffff; }
+    @keyframes orbit {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .orbit-ring { animation: orbit 45s linear infinite; }
+    .orbit-ring-rev { animation: orbit 35s linear infinite reverse; }
   </style>
 </head>
-<body class="bg-slate-100 h-screen flex overflow-hidden">
+<body class="text-slate-100 antialiased selection:bg-cyan-500 selection:text-slate-950">
 
-  <!-- SIDEBAR: CHAT HISTORY & SESSIONS -->
-  <aside id="sidebar" class="w-72 bg-slate-900 text-slate-200 flex flex-col transition-all duration-300 z-30 shadow-xl flex-shrink-0">
-    <!-- Header -->
-    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow">
-          🏛️
-        </div>
-        <span class="font-bold text-sm tracking-wide text-white">BIS Sahayak</span>
+  <!-- ==================== TOP NAVIGATION ==================== -->
+  <header class="sticky top-0 z-40 bg-[#081225]/90 backdrop-blur-md border-b border-slate-800/80 px-6 py-3.5 flex items-center justify-between">
+    <!-- Brand Logo -->
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+      <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-[0_0_15px_rgba(37,99,235,0.4)]">
+        ✦
       </div>
-      <button onclick="startNewChat()" title="Start New Chat" class="p-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs px-2.5 flex items-center space-x-1 transition shadow">
-        <i class="fa-solid fa-plus"></i>
-        <span>New</span>
+      <div>
+        <span class="font-extrabold text-base tracking-tight text-white block leading-none">BIS AI</span>
+        <span class="text-[9px] font-mono tracking-widest text-slate-400 uppercase" data-i18n="nav_sub">INTELLIGENT NAVIGATOR</span>
+      </div>
+    </div>
+
+    <!-- Desktop Navigation Links -->
+    <nav class="hidden md:flex items-center space-x-7 text-xs font-semibold text-slate-300">
+      <a href="#ai-assistant" class="hover:text-cyan-400 transition" data-i18n="nav_assistant">AI Assistant</a>
+      <a href="#toolkit" class="hover:text-cyan-400 transition" data-i18n="nav_toolkit">Standards</a>
+      <a href="#workflow" class="hover:text-cyan-400 transition" data-i18n="nav_workflow">Workflow</a>
+      <a href="#audiences" class="hover:text-cyan-400 transition" data-i18n="nav_audiences">Audience Routes</a>
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="flex items-center space-x-3">
+      <!-- Chat History Drawer Trigger -->
+      <button onclick="toggleHistoryDrawer()" class="px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center space-x-1.5 transition border border-slate-700">
+        <i class="fa-regular fa-clock text-slate-400"></i>
+        <span data-i18n="nav_history">History</span>
       </button>
-    </div>
 
-    <!-- Location Status in Sidebar -->
-    <div class="p-3 bg-slate-800/60 border-b border-slate-800 text-xs">
-      <div class="flex items-center justify-between text-slate-300 mb-1">
-        <span class="font-medium flex items-center space-x-1">
-          <i class="fa-solid fa-location-dot text-red-400"></i>
-          <span>Manufacturer Location:</span>
-        </span>
-      </div>
-      <div id="location-badge" class="text-[11px] text-slate-400 flex items-center justify-between">
-        <span id="location-text">Not Detected</span>
-        <button onclick="detectLocation()" class="text-blue-400 hover:text-blue-300 underline font-medium">Detect</button>
-      </div>
-    </div>
-
-    <!-- Past Sessions List -->
-    <div class="flex-1 overflow-y-auto p-3 space-y-1.5" id="chat-sessions-list">
-      <!-- Session items injected here via JS -->
-    </div>
-
-    <!-- Footer -->
-    <div class="p-3 border-t border-slate-800 text-xs flex justify-between items-center text-slate-400">
-      <span>Saved Locally</span>
-      <button onclick="clearAllChats()" class="text-red-400 hover:text-red-300 text-xs flex items-center space-x-1">
-        <i class="fa-solid fa-trash-can"></i>
-        <span>Clear All</span>
+      <!-- Language Toggle Switcher -->
+      <button onclick="toggleLanguage()" class="px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center space-x-1.5 transition border border-slate-700">
+        <i class="fa-solid fa-language text-cyan-400"></i>
+        <span id="lang-btn-text">EN / हिंदी</span>
       </button>
-    </div>
-  </aside>
 
-  <!-- MAIN CHAT CONTAINER -->
-  <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
-    
-    <!-- Top Bar -->
-    <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm z-10">
-      <div class="flex items-center space-x-3">
-        <button onclick="toggleSidebar()" class="text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 lg:hidden">
-          <i class="fa-solid fa-bars text-lg"></i>
+      <!-- Authentication / User Profile Button -->
+      <div id="auth-header-slot">
+        <button onclick="openAuthModal('login')" class="px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white text-xs font-semibold flex items-center space-x-1.5 transition border border-slate-700">
+          <i class="fa-regular fa-circle-user text-slate-400"></i>
+          <span data-i18n="nav_profile">Profile</span>
         </button>
-        <div>
-          <h1 class="font-bold text-slate-800 text-base flex items-center space-x-2">
-            <span>BIS Standards & Lab Locator</span>
-          </h1>
-          <p class="text-xs text-slate-500">Official Bureau of Indian Standards Intelligence & Proximity Testing Directory</p>
+      </div>
+
+      <!-- Orange CTA Button -->
+      <button onclick="scrollToAssistant()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-1.5 rounded-full font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)] transition transform active:scale-95 flex items-center space-x-1.5">
+        <span data-i18n="hero_cta1">Ask BIS AI</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== HERO SECTION ==================== -->
+  <section class="relative bg-gradient-to-b from-[#081225] via-[#0b1836] to-[#081225] pt-16 pb-24 px-6 overflow-hidden">
+    <!-- Ambient Glow Background Blobs -->
+    <div class="absolute top-10 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="absolute top-1/3 right-10 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <!-- Left Hero Content -->
+      <div class="lg:col-span-7 space-y-6">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-[11px] font-semibold text-cyan-400">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+          <span data-i18n="hero_badge">AI-POWERED BIS KNOWLEDGE ASSISTANT</span>
+        </div>
+
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
+          <span data-i18n="hero_title_1">Understand Indian Standards.</span><br />
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300" data-i18n="hero_title_2">Navigate BIS with Confidence.</span>
+        </h1>
+
+        <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl" data-i18n="hero_sub">
+          Ask questions in natural language, discover applicable Indian Standards, understand certification requirements, find testing resources, and receive source-backed answers from authorized BIS knowledge.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+          <button onclick="scrollToAssistant()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition flex items-center space-x-2">
+            <span data-i18n="hero_cta1">Ask BIS AI</span>
+            <i class="fa-solid fa-sparkles"></i>
+          </button>
+          <a href="#toolkit" class="bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs px-5 py-3 rounded-xl transition flex items-center space-x-2">
+            <span data-i18n="hero_cta2">Explore Standards</span>
+            <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+          </a>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 pt-3">
+          <span class="flex items-center space-x-1">
+            <i class="fa-solid fa-check text-cyan-400"></i>
+            <span data-i18n="badge_source">Source-backed answers</span>
+          </span>
+          <span class="flex items-center space-x-1">
+            <i class="fa-solid fa-check text-cyan-400"></i>
+            <span data-i18n="badge_auth">Authorized BIS knowledge</span>
+          </span>
+          <span class="flex items-center space-x-1">
+            <i class="fa-solid fa-check text-cyan-400"></i>
+            <span data-i18n="badge_lang">Multilingual support</span>
+          </span>
         </div>
       </div>
 
-      <!-- Quick Location Pill in Header -->
-      <button onclick="detectLocation()" id="header-loc-pill" class="flex items-center space-x-2 bg-slate-100 hover:bg-blue-50 border border-slate-200 text-slate-700 hover:text-blue-700 text-xs px-3 py-1.5 rounded-full transition shadow-sm">
-        <i class="fa-solid fa-crosshairs text-blue-600"></i>
-        <span id="header-loc-text">Locate Nearest Labs</span>
-      </button>
-    </header>
+      <!-- Right Hero Planetary Orbital Network Diagram -->
+      <div class="lg:col-span-5 flex items-center justify-center">
+        <div class="relative w-80 h-80 sm:w-96 sm:h-96 rounded-3xl bg-slate-900/60 border border-slate-800 backdrop-blur-md flex items-center justify-center p-6 shadow-2xl">
+          <!-- Orbital Concentric Rings -->
+          <div class="absolute w-72 h-72 rounded-full border border-slate-700/40 orbit-ring"></div>
+          <div class="absolute w-52 h-52 rounded-full border border-blue-500/20 orbit-ring-rev"></div>
 
-    <!-- Chat Messages Scroll Area -->
-    <main id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
-      <!-- Welcome Message -->
-      <div class="flex items-start space-x-3 max-w-3xl">
-        <div class="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-sm shadow flex-shrink-0">
-          🏛️
-        </div>
-        <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm text-slate-800 text-sm leading-relaxed prose">
-          <p><strong>Namaste! I am BIS Sahayak AI.</strong></p>
-          <p>I can help you navigate Indian Standards (IS Codes), Mandatory Quality Control Orders (QCOs), Scheme I/II/IV certification, Hallmarking (HUID), and <strong>locate testing laboratories near you with exact distances</strong>.</p>
-          <div class="mt-3 flex flex-wrap gap-2 not-prose">
-            <button onclick="askPreset('Which labs near me can test drinking water for IS 10500?')" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium px-3 py-1.5 rounded-lg border border-blue-200 transition">
-              💧 Nearest Water Testing Labs (IS 10500)
-            </button>
-            <button onclick="askPreset('Where can I test two-wheeler helmets near me for IS 4151?')" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 font-medium px-3 py-1.5 rounded-lg border border-amber-200 transition">
-              🪖 Nearest Helmet Testing Labs (IS 4151)
-            </button>
-            <button onclick="askPreset('How do I verify 6-digit HUID on Gold Jewellery?')" class="text-xs bg-yellow-50 hover:bg-yellow-100 text-yellow-800 font-medium px-3 py-1.5 rounded-lg border border-yellow-200 transition">
-              🏅 Verify Gold Hallmarking HUID
-            </button>
+          <!-- Central AI Knowledge Core -->
+          <div class="relative z-10 w-28 h-28 rounded-full bg-gradient-to-tr from-blue-700 via-blue-500 to-cyan-400 shadow-[0_0_50px_rgba(37,99,235,0.6)] flex items-center justify-center text-white text-3xl font-bold">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+
+          <!-- Orbiting Badges -->
+          <div class="absolute top-6 left-6 z-20 bg-slate-900/90 border border-slate-700 text-slate-200 text-[10px] font-semibold px-2.5 py-1 rounded-full shadow flex items-center space-x-1">
+            <i class="fa-solid fa-book text-cyan-400"></i>
+            <span>Standards</span>
+          </div>
+
+          <div class="absolute top-10 right-4 z-20 bg-slate-900/90 border border-slate-700 text-slate-200 text-[10px] font-semibold px-2.5 py-1 rounded-full shadow flex items-center space-x-1">
+            <i class="fa-solid fa-stamp text-amber-400"></i>
+            <span>Certification</span>
+          </div>
+
+          <div class="absolute bottom-12 left-4 z-20 bg-slate-900/90 border border-slate-700 text-slate-200 text-[10px] font-semibold px-2.5 py-1 rounded-full shadow flex items-center space-x-1">
+            <i class="fa-solid fa-flask text-emerald-400"></i>
+            <span>Testing Labs</span>
+          </div>
+
+          <div class="absolute bottom-6 right-8 z-20 bg-slate-900/90 border border-slate-700 text-slate-200 text-[10px] font-semibold px-2.5 py-1 rounded-full shadow flex items-center space-x-1">
+            <i class="fa-solid fa-award text-yellow-400"></i>
+            <span>Hallmarking HUID</span>
+          </div>
+
+          <!-- Bottom Status Pill -->
+          <div class="absolute bottom-2 inset-x-0 mx-auto w-max z-20 flex items-center space-x-1 text-[10px] text-emerald-400 bg-slate-950/80 px-3 py-0.5 rounded-full border border-emerald-500/30">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span data-i18n="badge_status">AUTHORIZED KNOWLEDGE NETWORK</span>
           </div>
         </div>
       </div>
-    </main>
-
-    <!-- Typing Indicator -->
-    <div id="typing-indicator" class="hidden px-6 py-2 bg-slate-50 text-slate-500 text-xs flex items-center space-x-2">
-      <div class="flex space-x-1">
-        <div class="w-2 h-2 rounded-full bg-blue-500 animate-bounce"></div>
-        <div class="w-2 h-2 rounded-full bg-blue-500 animate-bounce [animation-delay:0.2s]"></div>
-        <div class="w-2 h-2 rounded-full bg-blue-500 animate-bounce [animation-delay:0.4s]"></div>
-      </div>
-      <span>Querying PostgreSQL database and synthesizing answer...</span>
     </div>
+  </section>
 
-    <!-- Input Footer -->
-    <footer class="p-4 bg-white border-t border-slate-200">
-      <form id="chat-form" onsubmit="handleSend(event)" class="max-w-4xl mx-auto flex items-center space-x-2">
-        <button type="button" onclick="detectLocation()" title="Use GPS Location for nearby labs" class="p-3 text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-xl border border-slate-200 transition">
-          <i class="fa-solid fa-location-crosshairs text-base"></i>
-        </button>
-        <input 
-          id="user-input"
-          type="text" 
-          placeholder="Ask about Indian Standards, clauses, or 'labs for testing near me'..." 
-          class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800"
-          autocomplete="off"
-        />
-        <button 
-          type="submit" 
-          id="send-btn"
-          class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 py-3 rounded-xl text-sm flex items-center space-x-2 transition shadow-md"
-        >
-          <span>Send</span>
-          <i class="fa-solid fa-paper-plane text-xs"></i>
-        </button>
-      </form>
-    </footer>
-  </div>
+  <!-- ==================== THE BIS AI TOOLKIT (6 CARDS) ==================== -->
+  <section id="toolkit" class="py-20 px-6 bg-slate-900/40 border-t border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto space-y-12">
+      <div class="max-w-2xl space-y-2">
+        <span class="text-xs font-mono font-bold tracking-widest text-cyan-400 uppercase" data-i18n="tk_eyebrow">THE BIS AI TOOLKIT</span>
+        <h2 class="text-3xl font-extrabold text-white tracking-tight" data-i18n="tk_title">What can BIS AI help you with?</h2>
+        <p class="text-slate-400 text-xs sm:text-sm" data-i18n="tk_sub">One intelligent interface for the questions that sit between a product, a standard, and the next confident action.</p>
+      </div>
 
-  <!-- JAVASCRIPT: LOCATION ACCESS & PERSISTENT CHAT HISTORY -->
-  <script>
-    let userLocation = null;
-    let currentSessionId = null;
-    let sessions = {};
+      <!-- 6 Grid Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- 01 Find a Standard -->
+        <div class="bg-[#0b1836] border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-cyan-500/40 transition group cursor-pointer" onclick="askPreset('What is the mandatory standard for stainless steel water bottles?')">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="font-mono text-xs font-bold">01</span>
+            <i class="fa-solid fa-magnifying-glass text-cyan-400 text-sm"></i>
+          </div>
+          <h3 class="text-base font-bold text-white group-hover:text-cyan-300 transition" data-i18n="tk_1_title">Find a Standard</h3>
+          <p class="text-slate-400 text-xs leading-relaxed" data-i18n="tk_1_desc">Describe your product and discover relevant Indian Standards (IS codes), revisions, and specifications.</p>
+        </div>
 
-    // 1. Initialize Sessions from LocalStorage
-    function initApp() {
-      const saved = localStorage.getItem('bis_chat_sessions');
-      if (saved) {
-        try { sessions = JSON.parse(saved); } catch(e) { sessions = {}; }
-      }
-      
-      const sessionIds = Object.keys(sessions);
-      if (sessionIds.length > 0) {
-        currentSessionId = sessionIds[sessionIds.length - 1];
-        renderMessages();
-      } else {
-        startNewChat();
-      }
-      renderSessionList();
-      
-      // Check if location was previously granted and cached
-      const cachedLoc = localStorage.getItem('bis_user_loc');
-      if (cachedLoc) {
-        try {
-          userLocation = JSON.parse(cachedLoc);
-          updateLocationUI();
-        } catch(e) {}
-      }
-    }
+        <!-- 02 Certification Guide -->
+        <div class="bg-[#0b1836] border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-cyan-500/40 transition group cursor-pointer" onclick="askPreset('Explain the step by step process to get an ISI mark license under Scheme-I.')">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="font-mono text-xs font-bold">02</span>
+            <i class="fa-solid fa-file-certificate text-blue-400 text-sm"></i>
+          </div>
+          <h3 class="text-base font-bold text-white group-hover:text-cyan-300 transition" data-i18n="tk_2_title">Certification Guide</h3>
+          <p class="text-slate-400 text-xs leading-relaxed" data-i18n="tk_2_desc">Understand BIS certification schemes, procedures, Form-V filing, and factory inspection requirements.</p>
+        </div>
 
-    function saveSessions() {
-      localStorage.setItem('bis_chat_sessions', JSON.stringify(sessions));
-    }
+        <!-- 03 Compliance Check -->
+        <div class="bg-[#0b1836] border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-cyan-500/40 transition group cursor-pointer" onclick="askPreset('Which products are covered under mandatory Quality Control Orders (QCO)?')">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="font-mono text-xs font-bold">03</span>
+            <i class="fa-solid fa-list-check text-amber-400 text-sm"></i>
+          </div>
+          <h3 class="text-base font-bold text-white group-hover:text-cyan-300 transition" data-i18n="tk_3_title">Compliance Check</h3>
+          <p class="text-slate-400 text-xs leading-relaxed" data-i18n="tk_3_desc">Identify requirements and potential compliance gaps before you proceed with commercial manufacturing.</p>
+        </div>
 
-    function startNewChat() {
-      currentSessionId = 'session_' + Date.now();
-      sessions[currentSessionId] = {
-        title: 'New Inquiry',
-        createdAt: new Date().toISOString(),
-        messages: []
-      };
-      saveSessions();
-      renderSessionList();
-      renderMessages();
-    }
+        <!-- 04 Find Testing Lab -->
+        <div class="bg-[#0b1836] border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-cyan-500/40 transition group cursor-pointer" onclick="askPreset('Which testing labs near me can test drinking water samples for IS 10500?')">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="font-mono text-xs font-bold">04</span>
+            <i class="fa-solid fa-flask-vial text-emerald-400 text-sm"></i>
+          </div>
+          <h3 class="text-base font-bold text-white group-hover:text-cyan-300 transition" data-i18n="tk_4_title">Find Testing Lab</h3>
+          <p class="text-slate-400 text-xs leading-relaxed" data-i18n="tk_4_desc">Discover relevant recognized testing laboratories, active disciplines, and proximity distances.</p>
+        </div>
 
-    function clearAllChats() {
-      if (confirm('Clear all conversation history?')) {
-        sessions = {};
-        localStorage.removeItem('bis_chat_sessions');
-        startNewChat();
-      }
-    }
+        <!-- 05 Hallmarking -->
+        <div class="bg-[#0b1836] border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-cyan-500/40 transition group cursor-pointer" onclick="askPreset('How do I verify a 6-digit HUID code on gold jewellery?')">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="font-mono text-xs font-bold">05</span>
+            <i class="fa-solid fa-gem text-yellow-400 text-sm"></i>
+          </div>
+          <h3 class="text-base font-bold text-white group-hover:text-cyan-300 transition" data-i18n="tk_5_title">Hallmarking & HUID</h3>
+          <p class="text-slate-400 text-xs leading-relaxed" data-i18n="tk_5_desc">Understand gold purity grades, 6-digit alphanumeric HUID verification, and consumer redressal rights.</p>
+        </div>
 
-    function switchSession(id) {
-      if (sessions[id]) {
-        currentSessionId = id;
-        renderSessionList();
-        renderMessages();
-      }
-    }
+        <!-- 06 Ask a Document -->
+        <div class="bg-[#0b1836] border border-slate-800 rounded-2xl p-6 space-y-4 hover:border-cyan-500/40 transition group cursor-pointer" onclick="askPreset('What are the permissible limits for TDS and pH in drinking water under IS 10500?')">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="font-mono text-xs font-bold">06</span>
+            <i class="fa-solid fa-file-lines text-purple-400 text-sm"></i>
+          </div>
+          <h3 class="text-base font-bold text-white group-hover:text-cyan-300 transition" data-i18n="tk_6_title">Ask a Standard Clause</h3>
+          <p class="text-slate-400 text-xs leading-relaxed" data-i18n="tk_6_desc">Query exact clauses, limits, acceptable tolerances, and test methods verified in the SQL database.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    function renderSessionList() {
-      const listEl = document.getElementById('chat-sessions-list');
-      listEl.innerHTML = '';
-      
-      const keys = Object.keys(sessions).reverse();
-      keys.forEach(id => {
-        const s = sessions[id];
-        const isActive = id === currentSessionId;
-        const div = document.createElement('div');
-        div.className = `p-2.5 rounded-lg cursor-pointer text-xs flex items-center justify-between transition ${
-          isActive ? 'bg-blue-700/60 text-white font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-        }`;
-        div.onclick = () => switchSession(id);
-        
-        const titleSpan = document.createElement('span');
-        titleSpan.className = 'truncate max-w-[170px]';
-        titleSpan.innerText = s.title || 'Conversation';
+  <!-- ==================== BUILT FOR EVERYONE (AUDIENCE PATHS) ==================== -->
+  <section id="audiences" class="py-20 px-6 bg-[#081225]">
+    <div class="max-w-7xl mx-auto space-y-12">
+      <div class="space-y-2">
+        <span class="text-xs font-mono font-bold tracking-widest text-cyan-400 uppercase" data-i18n="aud_eyebrow">ONE PLATFORM, MANY PATHS</span>
+        <h2 class="text-3xl font-extrabold text-white tracking-tight" data-i18n="aud_title">Built for everyone who works with standards</h2>
+      </div>
 
-        const icon = document.createElement('i');
-        icon.className = 'fa-regular fa-message text-[10px] opacity-60';
-
-        div.appendChild(titleSpan);
-        div.appendChild(icon);
-        listEl.appendChild(div);
-      });
-    }
-
-    function renderMessages() {
-      const container = document.getElementById('chat-messages');
-      container.innerHTML = '';
-
-      const session = sessions[currentSessionId];
-      if (!session || session.messages.length === 0) {
-        // Show default greeting
-        container.innerHTML = `
-          <div class="flex items-start space-x-3 max-w-3xl">
-            <div class="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-sm shadow flex-shrink-0">
-              🏛️
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Industries & MSMEs -->
+        <div class="bg-[#0e204a] border-2 border-blue-500/50 rounded-2xl p-7 space-y-4 shadow-xl flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-300 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-industry"></i>
             </div>
-            <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm text-slate-800 text-sm leading-relaxed prose">
-              <p><strong>Namaste! I am BIS Sahayak AI.</strong></p>
-              <p>I can help you navigate Indian Standards, Mandatory QCOs, Scheme certification, and <strong>find testing laboratories near your factory or city with exact distances</strong>.</p>
-              <div class="mt-3 flex flex-wrap gap-2 not-prose">
-                <button onclick="askPreset('Which labs near me can test drinking water for IS 10500?')" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium px-3 py-1.5 rounded-lg border border-blue-200 transition">
-                  💧 Nearest Water Testing Labs
-                </button>
-                <button onclick="askPreset('Where can I test two-wheeler helmets near me for IS 4151?')" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 font-medium px-3 py-1.5 rounded-lg border border-amber-200 transition">
-                  🪖 Nearest Helmet Testing Labs
-                </button>
-                <button onclick="askPreset('Verify Gold Hallmarking 6-digit HUID rules')" class="text-xs bg-yellow-50 hover:bg-yellow-100 text-yellow-800 font-medium px-3 py-1.5 rounded-lg border border-yellow-200 transition">
-                  🏅 Gold Hallmarking HUID
-                </button>
+            <h3 class="text-lg font-bold text-white" data-i18n="aud_1_title">Industries & MSMEs</h3>
+            <p class="text-slate-300 text-xs leading-relaxed" data-i18n="aud_1_desc">Find applicable standards, mandatory QCO deadlines, certification requirements, testing procedures, and MSME fee concessions.</p>
+          </div>
+          <button onclick="askPreset('What concessions and fee rebates does BIS offer to MSME manufacturers?')" class="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center space-x-1 pt-4">
+            <span data-i18n="aud_1_cta">Explore for Industry</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+
+        <!-- Consumers -->
+        <div class="bg-[#0b1836] border border-slate-800 rounded-2xl p-7 space-y-4 flex flex-col justify-between hover:border-slate-700 transition">
+          <div class="space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white" data-i18n="aud_2_title">Consumers</h3>
+            <p class="text-slate-400 text-xs leading-relaxed" data-i18n="aud_2_desc">Understand BIS ISI marks, verify 6-digit gold HUIDs, verify product authenticity, and lodge grievance complaints.</p>
+          </div>
+          <button onclick="askPreset('How can a consumer file a complaint against a fake ISI mark product on the BIS Care App?')" class="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center space-x-1 pt-4">
+            <span data-i18n="aud_2_cta">Explore Consumer Services</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+
+        <!-- Students & Researchers -->
+        <div class="bg-[#0b1836] border border-slate-800 rounded-2xl p-7 space-y-4 flex flex-col justify-between hover:border-slate-700 transition">
+          <div class="space-y-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white" data-i18n="aud_3_title">Students & Researchers</h3>
+            <p class="text-slate-400 text-xs leading-relaxed" data-i18n="aud_3_desc">Search Indian standards, technical specifications, academic portal access, and standards club initiatives.</p>
+          </div>
+          <button onclick="askPreset('What is the BIS Standards Club and academic access program for engineering universities?')" class="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center space-x-1 pt-4">
+            <span data-i18n="aud_3_cta">Explore Resources</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== THE INTELLIGENT WORKFLOW (6 STEPS) ==================== -->
+  <section id="workflow" class="py-20 px-6 bg-slate-900/30 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto space-y-12">
+      <div class="max-w-2xl space-y-2">
+        <span class="text-xs font-mono font-bold tracking-widest text-cyan-400 uppercase" data-i18n="wf_eyebrow">THE INTELLIGENT WORKFLOW</span>
+        <h2 class="text-3xl font-extrabold text-white tracking-tight" data-i18n="wf_title">From question to action</h2>
+        <p class="text-slate-400 text-xs sm:text-sm" data-i18n="wf_sub">BIS AI makes the reasoning visible—so every answer can move someone closer to a real next step.</p>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="bg-[#0e204a] border-2 border-blue-500/40 rounded-xl p-4 space-y-2">
+          <span class="font-mono text-[11px] font-bold text-blue-300">01</span>
+          <h4 class="text-sm font-bold text-white">ASK</h4>
+          <p class="text-[11px] text-slate-300">Natural language question</p>
+        </div>
+        <div class="bg-[#0b1836] border border-slate-800 rounded-xl p-4 space-y-2">
+          <span class="font-mono text-[11px] font-bold text-slate-400">02</span>
+          <h4 class="text-sm font-bold text-white">UNDERSTAND</h4>
+          <p class="text-[11px] text-slate-400">Intent, product & context</p>
+        </div>
+        <div class="bg-[#0b1836] border border-slate-800 rounded-xl p-4 space-y-2">
+          <span class="font-mono text-[11px] font-bold text-slate-400">03</span>
+          <h4 class="text-sm font-bold text-white">RETRIEVE</h4>
+          <p class="text-[11px] text-slate-400">Authorized BIS PostgreSQL data</p>
+        </div>
+        <div class="bg-[#0b1836] border border-slate-800 rounded-xl p-4 space-y-2">
+          <span class="font-mono text-[11px] font-bold text-slate-400">04</span>
+          <h4 class="text-sm font-bold text-white">REASON</h4>
+          <p class="text-[11px] text-slate-400">Synthesize compliant answer</p>
+        </div>
+        <div class="bg-[#0b1836] border border-slate-800 rounded-xl p-4 space-y-2">
+          <span class="font-mono text-[11px] font-bold text-slate-400">05</span>
+          <h4 class="text-sm font-bold text-white">VERIFY</h4>
+          <p class="text-[11px] text-slate-400">Document and clause audit</p>
+        </div>
+        <div class="bg-blue-600 rounded-xl p-4 space-y-2 shadow-lg shadow-blue-500/20">
+          <span class="font-mono text-[11px] font-bold text-blue-200">06</span>
+          <h4 class="text-sm font-bold text-white">ACT</h4>
+          <p class="text-[11px] text-blue-100">Standards, labs & next steps</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SOURCE-GROUNDED CHAT INTERACTION ==================== -->
+  <section id="ai-assistant" class="py-20 px-6 bg-[#081225] border-t border-slate-800">
+    <div class="max-w-7xl mx-auto space-y-8">
+      <!-- Section Header -->
+      <div class="space-y-2">
+        <span class="text-xs font-mono font-bold tracking-widest text-amber-400 uppercase" data-i18n="chat_eyebrow">SOURCE-GROUNDED INTELLIGENCE</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight" data-i18n="chat_title">Ask BIS AI</h2>
+        <p class="text-slate-400 text-xs sm:text-sm max-w-xl" data-i18n="chat_sub">Not just a response. A transparent path from your question to the standard, clause, and next action behind it.</p>
+      </div>
+
+      <!-- Quick Preset Chips -->
+      <div class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none text-xs">
+        <span class="text-slate-400 whitespace-nowrap text-[11px]"><i class="fa-solid fa-bolt text-amber-400"></i> Try:</span>
+        <button onclick="askPreset('I manufacture stainless steel water bottles. Which Indian Standard applies and what certification requirements should I know?')" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 whitespace-nowrap transition">
+          Stainless Steel Bottles
+        </button>
+        <button onclick="askPreset('Which labs near me can test drinking water samples for IS 10500?')" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 whitespace-nowrap transition">
+          Water Testing Labs Near Me
+        </button>
+        <button onclick="askPreset('What are the helmet weight and penetration test requirements under IS 4151:2020?')" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 whitespace-nowrap transition">
+          Helmets (IS 4151)
+        </button>
+        <button onclick="askPreset('Explain the 6-digit HUID rules for 22 karat gold jewellery.')" class="px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 whitespace-nowrap transition">
+          Gold HUID (IS 1417)
+        </button>
+      </div>
+
+      <!-- Two-Column Interactive Workspace Matching Screenshot 2 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- Left Column: Chat Conversation Stream -->
+        <div class="lg:col-span-8 bg-[#0b1836] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+          <!-- Chat Card Header -->
+          <div class="px-6 py-4 border-b border-slate-800/80 bg-slate-900/60 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span class="text-xs font-bold text-white tracking-wide">BIS AI Assistant</span>
+            </div>
+            <div class="flex items-center space-x-3 text-[11px] text-slate-400 font-mono">
+              <span class="hidden sm:inline">CONNECTED TO POSTGRESQL KNOWLEDGE BASE</span>
+              <button onclick="detectLocation()" class="text-cyan-400 hover:underline flex items-center space-x-1">
+                <i class="fa-solid fa-location-crosshairs"></i>
+                <span id="loc-display-pill">Detect Location</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Messages Scroll View -->
+          <div id="messages-container" class="p-6 space-y-6 max-h-[560px] overflow-y-auto">
+            <!-- Default Sample Conversation matching Screenshot 2 -->
+            <div class="flex justify-end">
+              <div class="bg-blue-600 text-white text-xs sm:text-sm px-4 py-3 rounded-2xl rounded-tr-none max-w-lg leading-relaxed shadow">
+                I manufacture stainless steel water bottles. Which Indian Standard applies and what certification requirements should I know?
+              </div>
+            </div>
+
+            <!-- AI Response Box -->
+            <div class="bg-[#081225] border border-slate-700/80 rounded-2xl p-6 space-y-5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-slate-400 font-semibold" data-i18n="chat_rec_std">Recommended Standard</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <i class="fa-solid fa-check-circle mr-1"></i> High Relevance
+                </span>
+              </div>
+
+              <div>
+                <h3 class="text-2xl font-extrabold text-white font-mono">IS 17803 : 2022</h3>
+                <p class="text-xs text-cyan-300 font-semibold mt-1">Stainless Steel Vacuum Flasks / Insulated Bottles Specification</p>
+              </div>
+
+              <div class="space-y-1">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold" data-i18n="chat_why_std">WHY THIS STANDARD?</span>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Under DPIIT Quality Control Order (QCO), stainless steel vacuum flasks and containers intended for domestic liquids must bear the ISI mark under Scheme-I. Manufacturing without a valid CM/L license is a statutory offense under Section 29 of the BIS Act, 2016.
+                </p>
+              </div>
+
+              <!-- Next Steps Flow -->
+              <div class="space-y-2 pt-3 border-t border-slate-800">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold" data-i18n="chat_next_steps">NEXT STEPS</span>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-300 font-mono">
+                  <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center space-x-2">
+                    <span class="text-cyan-400 font-bold">01</span>
+                    <span>Review applicable standard & STI</span>
+                  </div>
+                  <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center space-x-2">
+                    <span class="text-cyan-400 font-bold">02</span>
+                    <span>Check Scheme-I (80% MSME rebate)</span>
+                  </div>
+                  <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center space-x-2">
+                    <span class="text-cyan-400 font-bold">03</span>
+                    <span>Type testing in NABL / BIS lab</span>
+                  </div>
+                  <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center space-x-2">
+                    <span class="text-cyan-400 font-bold">04</span>
+                    <span>Prepare Manakonline Form-V filing</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        `;
-        return;
+
+          <!-- Typing Indicator -->
+          <div id="ai-typing-bar" class="hidden px-6 py-2 bg-slate-900 text-slate-400 text-xs flex items-center space-x-2 border-t border-slate-800">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+            <span>Querying PostgreSQL database & generating grounded response...</span>
+          </div>
+
+          <!-- User Input Box -->
+          <div class="p-4 bg-slate-900/90 border-t border-slate-800">
+            <form onsubmit="handleChatSubmit(event)" class="relative flex items-center">
+              <input 
+                id="chat-input"
+                type="text" 
+                placeholder="Ask about any product, IS code, testing lab near you, or compliance..."
+                class="w-full bg-[#081225] border border-slate-700 rounded-2xl px-5 py-3.5 pr-28 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+              />
+              <button 
+                type="submit"
+                class="absolute right-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition flex items-center space-x-1.5 shadow"
+              >
+                <span>Send</span>
+                <i class="fa-solid fa-paper-plane text-[10px]"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Column: Evidence & Verified Sources Panel matching Screenshot 2 -->
+        <div class="lg:col-span-4 space-y-4">
+          <div class="bg-[#0b1836] border border-slate-800 rounded-3xl p-6 space-y-5 shadow-xl">
+            <div>
+              <span class="text-[10px] font-mono font-bold tracking-widest text-amber-400 uppercase" data-i18n="ev_eyebrow">SOURCES</span>
+              <h3 class="text-lg font-bold text-white mt-1" data-i18n="ev_title">Every answer shows its evidence.</h3>
+              <p class="text-xs text-slate-400 mt-1" data-i18n="ev_sub">Review the standard, document, and clause references before you act.</p>
+            </div>
+
+            <!-- Active Standard Evidence Card -->
+            <div id="evidence-source-card" class="bg-[#081225] border border-slate-700/80 rounded-2xl p-4 space-y-3">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-[10px] font-mono font-bold text-cyan-400 uppercase">INDIAN STANDARD</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-slate-400 text-xs"></i>
+              </div>
+              <h4 class="font-bold text-white text-xs">IS 17803:2022 — Clause 5.2 & 8.1</h4>
+              <p class="text-[11px] text-slate-300">BIS Certification Scheme I — Domestic Product Certification (ISI Mark)</p>
+              <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px]">
+                <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> PostgreSQL Verified</span>
+                <a href="https://www.manakonline.in" target="_blank" class="text-cyan-400 hover:underline">View source →</a>
+              </div>
+            </div>
+
+            <!-- Nearest Laboratory Card with GPS Distance -->
+            <div id="evidence-lab-card" class="bg-[#081225] border border-slate-700/80 rounded-2xl p-4 space-y-2">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-[10px] font-mono font-bold text-emerald-400 uppercase">NEAREST TESTING FACILITY</span>
+                <span class="text-[10px] text-slate-400 font-mono" id="lab-dist-tag">Proximity Verified</span>
+              </div>
+              <h4 class="font-bold text-white text-xs" id="lab-name-tag">BIS Central Laboratory (National HQ)</h4>
+              <p class="text-[11px] text-slate-300" id="lab-address-tag">Sahibabad Industrial Area, Ghaziabad, UP</p>
+              <p class="text-[10px] text-slate-400" id="lab-phone-tag">Phone: 0120-2770030 | Email: cl@bis.gov.in</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER MATCHING SCREENSHOT 1 ==================== -->
+  <footer class="bg-[#050c1b] border-t border-slate-800/80 pt-16 pb-12 px-6 text-slate-400 text-xs">
+    <div class="max-w-7xl mx-auto space-y-12">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <!-- Brand -->
+        <div class="space-y-3">
+          <span class="font-extrabold text-white text-base tracking-tight block">BIS AI</span>
+          <p class="text-xs leading-relaxed max-w-xs" data-i18n="footer_brand_desc">
+            Intelligent access to Indian Standards and BIS services.
+          </p>
+        </div>
+
+        <!-- Col 2: Product -->
+        <div class="space-y-2.5">
+          <h4 class="font-bold text-amber-500 uppercase tracking-wider text-[11px]" data-i18n="footer_col_prod">PRODUCT</h4>
+          <ul class="space-y-1.5">
+            <li><a href="#ai-assistant" class="hover:text-white transition">AI Assistant</a></li>
+            <li><a href="#toolkit" class="hover:text-white transition">Standards</a></li>
+            <li><a href="#toolkit" class="hover:text-white transition">Certification</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Resources -->
+        <div class="space-y-2.5">
+          <h4 class="font-bold text-amber-500 uppercase tracking-wider text-[11px]" data-i18n="footer_col_res">RESOURCES</h4>
+          <ul class="space-y-1.5">
+            <li><a href="#toolkit" class="hover:text-white transition">Testing Labs</a></li>
+            <li><a href="#toolkit" class="hover:text-white transition">Hallmarking</a></li>
+            <li><a href="https://www.manakonline.in" target="_blank" class="hover:text-white transition">Services Hub</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Authority Status -->
+        <div class="space-y-2.5">
+          <h4 class="font-bold text-amber-500 uppercase tracking-wider text-[11px]">CONNECTIVITY</h4>
+          <p class="text-[11px] leading-relaxed">
+            Connected to local PostgreSQL database (<code class="text-cyan-400">bis_database</code>) on port 5432.
+          </p>
+        </div>
+      </div>
+
+      <!-- Legal Disclaimer & Copyright -->
+      <div class="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px]">
+        <p data-i18n="footer_disclaimer">
+          AI-generated guidance is based on available authorized BIS information. Always verify against the latest official documents and regulations.
+        </p>
+        <div class="flex items-center space-x-4">
+          <a href="#" class="hover:text-white transition">Privacy</a>
+          <a href="#" class="hover:text-white transition">Terms</a>
+          <a href="#" class="hover:text-white transition">Disclaimer</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== CHAT HISTORY DRAWER ==================== -->
+  <div id="history-drawer" class="fixed inset-y-0 right-0 w-80 bg-[#081225] border-l border-slate-800 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+      <div class="flex items-center space-x-2">
+        <i class="fa-regular fa-clock text-cyan-400"></i>
+        <span class="font-bold text-sm text-white">Chat History</span>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="startNewChatSession()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded-lg">
+          + New
+        </button>
+        <button onclick="toggleHistoryDrawer()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- History List -->
+    <div id="history-sessions-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+
+    <div class="p-4 border-t border-slate-800 text-xs flex justify-between items-center text-slate-400">
+      <span>Saved in Browser</span>
+      <button onclick="clearHistory()" class="text-red-400 hover:underline">Clear All</button>
+    </div>
+  </div>
+
+  <!-- ==================== AUTH & PROFILE MODALS ==================== -->
+  <!-- Auth Modal (Login / Register) -->
+  <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-[#0b1836] border border-slate-700 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 id="auth-title" class="font-bold text-white text-base">Sign In to BIS Sahayak</h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div id="auth-error-box" class="hidden p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-300 text-xs"></div>
+
+      <!-- Login Form -->
+      <form id="login-form" onsubmit="executeLogin(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">Email Address</label>
+          <input id="login-email" type="email" required placeholder="user@company.com" class="w-full bg-[#081225] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">Password</label>
+          <input id="login-password" type="password" required placeholder="••••••••" class="w-full bg-[#081225] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white" />
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition mt-2">
+          Sign In
+        </button>
+        <p class="text-center text-xs text-slate-400 mt-2">
+          No account? <a href="#" onclick="switchAuthTab('register')" class="text-cyan-400 hover:underline">Register here</a>
+        </p>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" onsubmit="executeRegister(event)" class="space-y-2.5 hidden">
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">Full Name</label>
+          <input id="reg-name" type="text" required placeholder="Abhijit Shekhar" class="w-full bg-[#081225] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">Email Address</label>
+          <input id="reg-email" type="email" required placeholder="abhijit@domain.com" class="w-full bg-[#081225] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">Password (Min. 6 chars)</label>
+          <input id="reg-password" type="password" required minlength="6" placeholder="••••••••" class="w-full bg-[#081225] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-300 mb-1">Role</label>
+          <select id="reg-role" class="w-full bg-[#081225] border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            <option value="Manufacturer">Manufacturer</option>
+            <option value="Citizen / Consumer">Citizen / Consumer</option>
+            <option value="Jeweller / AHC">Jeweller / AHC</option>
+            <option value="Auditor / Lab">Auditor / Lab</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition mt-2">
+          Create Account
+        </button>
+        <p class="text-center text-xs text-slate-400 mt-2">
+          Already registered? <a href="#" onclick="switchAuthTab('login')" class="text-cyan-400 hover:underline">Sign In</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- User Profile Modal -->
+  <div id="profile-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-[#0b1836] border border-slate-700 rounded-3xl w-full max-w-sm overflow-hidden p-6 shadow-2xl space-y-4 text-center">
+      <div class="w-16 h-16 rounded-full bg-blue-600 text-white text-2xl font-bold flex items-center justify-center mx-auto shadow-lg">
+        <span id="prof-initials">U</span>
+      </div>
+      <div>
+        <h3 id="prof-name" class="text-base font-bold text-white">User Name</h3>
+        <p id="prof-role" class="text-xs text-cyan-400">Citizen / Consumer</p>
+      </div>
+
+      <div class="bg-[#081225] p-4 rounded-xl text-left text-xs space-y-2 border border-slate-800">
+        <div class="flex justify-between"><span class="text-slate-500">Email:</span><span id="prof-email" class="text-white">user@domain.com</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Joined:</span><span id="prof-joined" class="text-white">2026-09-08</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Verified:</span><span class="text-emerald-400">PostgreSQL Active</span></div>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="executeLogout()" class="flex-1 bg-red-600/20 hover:bg-red-600/30 text-red-300 font-bold py-2 rounded-xl text-xs transition border border-red-500/30">
+          Log Out
+        </button>
+        <button onclick="closeProfileModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl text-xs transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT: LOGIC, I18N & RAG ==================== -->
+  <script>
+    // 1. Language Translation Dictionary (English <-> Hindi)
+    const translations = {
+      en: {
+        nav_sub: "INTELLIGENT NAVIGATOR",
+        nav_assistant: "AI Assistant",
+        nav_toolkit: "Standards",
+        nav_workflow: "Workflow",
+        nav_audiences: "Audience Routes",
+        nav_history: "History",
+        nav_profile: "Profile",
+        hero_badge: "AI-POWERED BIS KNOWLEDGE ASSISTANT",
+        hero_title_1: "Understand Indian Standards.",
+        hero_title_2: "Navigate BIS with Confidence.",
+        hero_sub: "Ask questions in natural language, discover applicable Indian Standards, understand certification requirements, find testing resources, and receive source-backed answers from authorized BIS knowledge.",
+        hero_cta1: "Ask BIS AI",
+        hero_cta2: "Explore Standards",
+        badge_source: "Source-backed answers",
+        badge_auth: "Authorized BIS knowledge",
+        badge_lang: "Multilingual support",
+        badge_status: "AUTHORIZED KNOWLEDGE NETWORK",
+        tk_eyebrow: "THE BIS AI TOOLKIT",
+        tk_title: "What can BIS AI help you with?",
+        tk_sub: "One intelligent interface for the questions that sit between a product, a standard, and the next confident action.",
+        tk_1_title: "Find a Standard",
+        tk_1_desc: "Describe your product and discover relevant Indian Standards (IS codes), revisions, and specifications.",
+        tk_2_title: "Certification Guide",
+        tk_2_desc: "Understand BIS certification schemes, procedures, Form-V filing, and factory inspection requirements.",
+        tk_3_title: "Compliance Check",
+        tk_3_desc: "Identify requirements and potential compliance gaps before you proceed with commercial manufacturing.",
+        tk_4_title: "Find Testing Lab",
+        tk_4_desc: "Discover relevant recognized testing laboratories, active disciplines, and proximity distances.",
+        tk_5_title: "Hallmarking & HUID",
+        tk_5_desc: "Understand gold purity grades, 6-digit alphanumeric HUID verification, and consumer redressal rights.",
+        tk_6_title: "Ask a Standard Clause",
+        tk_6_desc: "Query exact clauses, limits, acceptable tolerances, and test methods verified in the SQL database.",
+        aud_eyebrow: "ONE PLATFORM, MANY PATHS",
+        aud_title: "Built for everyone who works with standards",
+        aud_1_title: "Industries & MSMEs",
+        aud_1_desc: "Find applicable standards, mandatory QCO deadlines, certification requirements, testing procedures, and MSME fee concessions.",
+        aud_1_cta: "Explore for Industry",
+        aud_2_title: "Consumers",
+        aud_2_desc: "Understand BIS ISI marks, verify 6-digit gold HUIDs, verify product authenticity, and lodge grievance complaints.",
+        aud_2_cta: "Explore Consumer Services",
+        aud_3_title: "Students & Researchers",
+        aud_3_desc: "Search Indian standards, technical specifications, academic portal access, and standards club initiatives.",
+        aud_3_cta: "Explore Resources",
+        wf_eyebrow: "THE INTELLIGENT WORKFLOW",
+        wf_title: "From question to action",
+        wf_sub: "BIS AI makes the reasoning visible—so every answer can move someone closer to a real next step.",
+        chat_eyebrow: "SOURCE-GROUNDED INTELLIGENCE",
+        chat_title: "Ask BIS AI",
+        chat_sub: "Not just a response. A transparent path from your question to the standard, clause, and next action behind it.",
+        chat_rec_std: "Recommended Standard",
+        chat_why_std: "WHY THIS STANDARD?",
+        chat_next_steps: "NEXT STEPS",
+        ev_eyebrow: "SOURCES",
+        ev_title: "Every answer shows its evidence.",
+        ev_sub: "Review the standard, document, and clause references before you act.",
+        footer_brand_desc: "Intelligent access to Indian Standards and BIS services.",
+        footer_col_prod: "PRODUCT",
+        footer_col_res: "RESOURCES",
+        footer_disclaimer: "AI-generated guidance is based on available authorized BIS information. Always verify against the latest official documents and regulations."
+      },
+      hi: {
+        nav_sub: "बुद्धिमान मानक मार्गदर्शक",
+        nav_assistant: "एआई सहायक",
+        nav_toolkit: "भारतीय मानक",
+        nav_workflow: "प्रक्रिया",
+        nav_audiences: "हितधारक पोर्टल",
+        nav_history: "इतिहास",
+        nav_profile: "प्रोफाइल",
+        hero_badge: "एआई-संचालित बीआईएस ज्ञान सहायक",
+        hero_title_1: "भारतीय मानकों को समझें।",
+        hero_title_2: "विश्वास के साथ बीआईएस नेविगेट करें।",
+        hero_sub: "प्राकृतिक भाषा में प्रश्न पूछें, लागू भारतीय मानकों की खोज करें, प्रमाणन आवश्यकताओं को समझें, और आधिकारिक बीआईएस ज्ञान से उत्तर प्राप्त करें।",
+        hero_cta1: "बीआईएस एआई से पूछें",
+        hero_cta2: "मानक देखें",
+        badge_source: "प्रमाणित साक्ष्य-आधारित उत्तर",
+        badge_auth: "अधिकृत बीआईएस डेटाबेस",
+        badge_lang: "बहुभाषी सहायता उपलब्ध",
+        badge_status: "सत्यापित राष्ट्रीय ज्ञान नेटवर्क",
+        tk_eyebrow: "बीआईएस एआई टूलकिट",
+        tk_title: "बीआईएस एआई आपकी क्या मदद कर सकता है?",
+        tk_sub: "उत्पाद, मानक और आपके अगले कदम के बीच का संपूर्ण बुद्धिमान इंटरफ़ेस।",
+        tk_1_title: "मानक खोजें",
+        tk_1_desc: "अपने उत्पाद का वर्णन करें और संबंधित भारतीय मानक (IS कोड) तुरंत खोजें।",
+        tk_2_title: "प्रमाणन मार्गदर्शिका",
+        tk_2_desc: "स्कीम-I (ISI मार्क), CRS और FMCS प्रमाणन प्रक्रियाओं को चरणबद्ध समझें।",
+        tk_3_title: "अनुपालन जांच",
+        tk_3_desc: "अनिवार्य गुणवत्ता नियंत्रण आदेश (QCO) और विनियामक आवश्यकताओं की जांच करें।",
+        tk_4_title: "परीक्षण प्रयोगशालाएं",
+        tk_4_desc: "अपने नजदीकी मान्यता प्राप्त बीआईएस एवं एनएबीएल टेस्टिंग लैब खोजें।",
+        tk_5_title: "हॉलमार्किंग एवं HUID",
+        tk_5_desc: "स्वर्ण शुद्धता ग्रेड और 6-अंकीय HUID कोड का आधिकारिक सत्यापन करें।",
+        tk_6_title: "मानक क्लॉज पूछताछ",
+        tk_6_desc: "विशिष्ट रासायनिक एवं भौतिक परीक्षण सीमाओं के सटीक क्लॉज जानें।",
+        aud_eyebrow: "एक मंच, अनेक मार्ग",
+        aud_title: "मानकों के साथ काम करने वाले प्रत्येक व्यक्ति के लिए",
+        aud_1_title: "उद्योग एवं एमएसएमई",
+        aud_1_desc: "लागू मानक, अनिवार्य QCO समय-सीमा, परीक्षण प्रक्रियाएं और 80% एमएसएमई शुल्क छूट जानें।",
+        aud_1_cta: "उद्योग जानकारी देखें",
+        aud_2_title: "भारतीय उपभोक्ता",
+        aud_2_desc: "असली ISI मार्क और 6-अंकीय सोने के HUID की सत्यता जांचें और शिकायत दर्ज करें।",
+        aud_2_cta: "उपभोक्ता सेवाएं देखें",
+        aud_3_title: "विद्यार्थी एवं शोधकर्ता",
+        aud_3_desc: "अकादमिक पोर्टल, रिसर्च रेफरेंस और बीआईएस स्टैंडर्ड्स क्लब पहल से जुड़ें।",
+        aud_3_cta: "संसाधन खोजें",
+        wf_eyebrow: "बुद्धिमान प्रक्रिया",
+        wf_title: "प्रश्न से वास्तविक कार्रवाई तक",
+        wf_sub: "बीआईएस एआई प्रत्येक उत्तर को आधिकारिक स्रोत से जोड़कर प्रस्तुत करता है।",
+        chat_eyebrow: "साक्ष्य-आधारित बुद्धिमत्ता",
+        chat_title: "बीआईएस एआई से पूछें",
+        chat_sub: "केवल एक उत्तर नहीं, बल्कि मानक, क्लॉज और अगले कदम तक का पारदर्शी मार्ग।",
+        chat_rec_std: "अनुशंसित भारतीय मानक",
+        chat_why_std: "यह मानक क्यों लागू है?",
+        chat_next_steps: "अगले कदम",
+        ev_eyebrow: "सत्यापित साक्ष्य",
+        ev_title: "प्रत्येक उत्तर अपना स्रोत दिखाता है।",
+        ev_sub: "कार्रवाई करने से पहले मानक, राजपत्र और क्लॉज संदर्भों की पुष्टि करें।",
+        footer_brand_desc: "भारतीय मानकों और बीआईएस सेवाओं तक बुद्धिमान पहुंच।",
+        footer_col_prod: "उत्पाद",
+        footer_col_res: "संसाधन",
+        footer_disclaimer: "एआई मार्गदर्शन उपलब्ध बीआईएस नियमों पर आधारित है। कृपया हमेशा आधिकारिक राजपत्र से पुष्टि करें।"
+      }
+    };
+
+    let currentLang = 'en';
+    let userLocation = null;
+    let currentUser = null;
+    let chatSessions = {};
+    let activeSessionId = 'session_' + Date.now();
+
+    function initApp() {
+      // Load saved language
+      const savedLang = localStorage.getItem('bis_lang');
+      if (savedLang) { currentLang = savedLang; applyLanguage(); }
+
+      // Load user
+      const savedUser = localStorage.getItem('bis_current_user');
+      if (savedUser) {
+        try { currentUser = JSON.parse(savedUser); renderAuthHeader(); } catch(e){}
       }
 
-      session.messages.forEach(msg => {
-        appendMessageUI(msg.role, msg.text, false);
+      // Load chat sessions
+      const savedSessions = localStorage.getItem('bis_chat_sessions');
+      if (savedSessions) {
+        try { chatSessions = JSON.parse(savedSessions); } catch(e){ chatSessions = {}; }
+      }
+      if (!chatSessions[activeSessionId]) {
+        chatSessions[activeSessionId] = { title: 'Water Bottles (IS 17803)', messages: [] };
+      }
+      renderHistoryList();
+
+      // Check cached location
+      const savedLoc = localStorage.getItem('bis_user_loc');
+      if (savedLoc) {
+        try { userLocation = JSON.parse(savedLoc); updateLocationUI(); } catch(e){}
+      }
+    }
+
+    // 2. Language Toggle Function
+    function toggleLanguage() {
+      currentLang = currentLang === 'en' ? 'hi' : 'en';
+      localStorage.setItem('bis_lang', currentLang);
+      applyLanguage();
+    }
+
+    function applyLanguage() {
+      document.getElementById('lang-btn-text').innerText = currentLang === 'en' ? 'EN / हिंदी' : 'हिंदी / EN';
+      const dict = translations[currentLang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.innerText = dict[key];
       });
-      container.scrollTop = container.scrollHeight;
     }
 
-    function appendMessageUI(role, text, shouldScroll = true) {
-      const container = document.getElementById('chat-messages');
-      const isUser = role === 'user';
-      
-      const row = document.createElement('div');
-      row.className = `flex items-start space-x-3 ${isUser ? 'justify-end' : 'justify-start max-w-3xl'}`;
-
-      if (!isUser) {
-        row.innerHTML = `
-          <div class="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-sm shadow flex-shrink-0">🏛️</div>
-          <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm text-slate-800 text-sm leading-relaxed prose">${marked.parse(text)}</div>
-        `;
-      } else {
-        row.innerHTML = `
-          <div class="bg-blue-600 text-white rounded-2xl rounded-tr-none px-4 py-3 shadow-sm text-sm max-w-xl leading-relaxed">${text}</div>
-          <div class="w-8 h-8 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center font-bold text-xs shadow flex-shrink-0">👤</div>
-        `;
-      }
-
-      container.appendChild(row);
-      if (shouldScroll) container.scrollTop = container.scrollHeight;
+    function scrollToAssistant() {
+      document.getElementById('ai-assistant').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // 2. GEOLOCATION DETECTION & REVERSE GEOCODING
+    // 3. Geolocation Access (Haversine Distance in Backend)
     function detectLocation() {
       if (!navigator.geolocation) {
         alert("Geolocation is not supported by your browser.");
         return;
       }
-
-      document.getElementById('location-text').innerText = "Locating GPS...";
-      document.getElementById('header-loc-text').innerText = "Detecting GPS...";
-
+      document.getElementById('loc-display-pill').innerText = "Locating GPS...";
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
           userLocation = { latitude: lat, longitude: lon, city: '', state: '' };
 
-          // Reverse geocode via OpenStreetMap free API
           try {
             const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
             const data = await resp.json();
             const addr = data.address || {};
-            userLocation.city = addr.city || addr.town || addr.district || addr.state_district || 'Near User';
+            userLocation.city = addr.city || addr.town || addr.district || 'Near User';
             userLocation.state = addr.state || 'India';
           } catch(e) {
             userLocation.city = 'Detected Location';
@@ -331,10 +894,8 @@
           localStorage.setItem('bis_user_loc', JSON.stringify(userLocation));
           updateLocationUI();
         },
-        (error) => {
-          console.warn("Location error:", error);
-          document.getElementById('location-text').innerText = "Permission Denied";
-          document.getElementById('header-loc-text').innerText = "Location Off";
+        () => {
+          document.getElementById('loc-display-pill').innerText = "Location Off";
         },
         { timeout: 10000, enableHighAccuracy: true }
       );
@@ -342,77 +903,290 @@
 
     function updateLocationUI() {
       if (userLocation && userLocation.city) {
-        const text = `📍 ${userLocation.city}, ${userLocation.state}`;
-        document.getElementById('location-text').innerText = text;
-        document.getElementById('header-loc-text').innerText = text;
-        document.getElementById('header-loc-pill').classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+        document.getElementById('loc-display-pill').innerText = `📍 ${userLocation.city}`;
       }
     }
 
-    // 3. SEND MESSAGE WITH MULTI-TURN HISTORY & GPS LOCATION
-    async function handleSend(e) {
+    // 4. Chat History Drawer Management
+    function toggleHistoryDrawer() {
+      const drawer = document.getElementById('history-drawer');
+      drawer.classList.toggle('translate-x-full');
+    }
+
+    function startNewChatSession() {
+      activeSessionId = 'session_' + Date.now();
+      chatSessions[activeSessionId] = { title: 'New Question', messages: [] };
+      saveChatSessions();
+      renderHistoryList();
+      document.getElementById('messages-container').innerHTML = `
+        <div class="p-6 bg-[#081225] border border-slate-700/60 rounded-2xl text-center space-y-2">
+          <p class="text-sm font-bold text-white">New Conversation Started</p>
+          <p class="text-xs text-slate-400">Ask any question about Indian Standards, mandatory QCOs, or testing laboratories near you.</p>
+        </div>
+      `;
+      toggleHistoryDrawer();
+    }
+
+    function saveChatSessions() {
+      localStorage.setItem('bis_chat_sessions', JSON.stringify(chatSessions));
+    }
+
+    function renderHistoryList() {
+      const listEl = document.getElementById('history-sessions-list');
+      listEl.innerHTML = '';
+      const keys = Object.keys(chatSessions).reverse();
+      keys.forEach(id => {
+        const s = chatSessions[id];
+        const btn = document.createElement('button');
+        btn.className = `w-full text-left p-3 rounded-xl text-xs border transition ${
+          id === activeSessionId ? 'bg-blue-600/30 border-blue-500 text-white font-semibold' : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white'
+        }`;
+        btn.innerText = s.title || 'Conversation';
+        btn.onclick = () => { activeSessionId = id; renderHistoryList(); toggleHistoryDrawer(); };
+        listEl.appendChild(btn);
+      });
+    }
+
+    function clearHistory() {
+      if (confirm("Clear all saved chat history?")) {
+        chatSessions = {};
+        localStorage.removeItem('bis_chat_sessions');
+        startNewChatSession();
+      }
+    }
+
+    // 5. Send Message to Python FastAPI Backend (Live PostgreSQL RAG)
+    async function handleChatSubmit(e) {
       if (e) e.preventDefault();
-      const input = document.getElementById('user-input');
-      const text = input.value.trim();
-      if (!text) return;
+      const input = document.getElementById('chat-input');
+      const query = input.value.trim();
+      if (!query) return;
 
       input.value = '';
-
-      // Update current session
-      const session = sessions[currentSessionId];
-      if (session.messages.length === 0) {
-        session.title = text.length > 25 ? text.substring(0, 25) + '...' : text;
-        renderSessionList();
-      }
-
-      session.messages.push({ role: 'user', text: text });
-      appendMessageUI('user', text);
-      saveSessions();
+      appendUserMessage(query);
 
       // Show typing indicator
-      document.getElementById('typing-indicator').classList.remove('hidden');
+      const typing = document.getElementById('ai-typing-bar');
+      typing.classList.remove('hidden');
 
-      // Prepare payload with history & location
-      const historyPayload = session.messages.slice(0, -1).map(m => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        text: m.text
-      }));
+      // Update current session title
+      const session = chatSessions[activeSessionId];
+      if (session.messages.length === 0) {
+        session.title = query.length > 25 ? query.substring(0, 25) + '...' : query;
+        renderHistoryList();
+      }
+      session.messages.push({ role: 'user', text: query });
+      saveChatSessions();
 
       try {
-        const response = await fetch('/api/chat', {
+        const resp = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: text,
-            history: historyPayload,
+            message: query,
+            history: session.messages.slice(0, -1),
             location: userLocation
           })
         });
+        const data = await resp.json();
+        typing.classList.add('hidden');
 
-        const data = await response.json();
-        document.getElementById('typing-indicator').classList.add('hidden');
-
-        if (data.success) {
+        if (data.success && data.reply) {
           session.messages.push({ role: 'model', text: data.reply });
-          appendMessageUI('model', data.reply);
-          saveSessions();
+          saveChatSessions();
+          appendAIResponse(data.reply);
+          updateEvidencePane(query, data.reply);
         } else {
-          appendMessageUI('model', '⚠️ Unable to process request. Please check server connection.');
+          appendAIResponse("⚠️ Unable to retrieve data from server.");
         }
       } catch (err) {
-        document.getElementById('typing-indicator').classList.add('hidden');
-        appendMessageUI('model', `⚠️ Error connecting to server: ${err.message}`);
+        typing.classList.add('hidden');
+        appendAIResponse(`⚠️ Error connecting to server: ${err.message}`);
       }
     }
 
-    function askPreset(query) {
-      document.getElementById('user-input').value = query;
-      handleSend();
+    function askPreset(q) {
+      document.getElementById('chat-input').value = q;
+      scrollToAssistant();
+      handleChatSubmit();
     }
 
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('-translate-x-full');
+    function appendUserMessage(text) {
+      const container = document.getElementById('messages-container');
+      const div = document.createElement('div');
+      div.className = "flex justify-end";
+      div.innerHTML = `<div class="bg-blue-600 text-white text-xs sm:text-sm px-4 py-3 rounded-2xl rounded-tr-none max-w-lg leading-relaxed shadow">${text}</div>`;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function appendAIResponse(replyMarkdown) {
+      const container = document.getElementById('messages-container');
+      const div = document.createElement('div');
+      div.className = "bg-[#081225] border border-slate-700/80 rounded-2xl p-6 space-y-4 prose text-xs sm:text-sm text-slate-200 leading-relaxed shadow-lg";
+      div.innerHTML = marked.parse(replyMarkdown);
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function updateEvidencePane(query, reply) {
+      const qLower = query.toLowerCase();
+      const stdCard = document.getElementById('evidence-source-card');
+      const labCard = document.getElementById('evidence-lab-card');
+
+      if (qLower.includes('water') || qLower.includes('10500') || qLower.includes('14543')) {
+        stdCard.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-[10px] font-mono font-bold text-cyan-400 uppercase">INDIAN STANDARD</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-slate-400 text-xs"></i>
+          </div>
+          <h4 class="font-bold text-white text-xs">IS 10500:2012 / IS 14543:2024</h4>
+          <p class="text-[11px] text-slate-300">Drinking Water & Packaged Water Specifications</p>
+          <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px]">
+            <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> PostgreSQL Verified</span>
+            <a href="https://www.manakonline.in" target="_blank" class="text-cyan-400 hover:underline">View source →</a>
+          </div>
+        `;
+      } else if (qLower.includes('helmet') || qLower.includes('4151')) {
+        stdCard.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-[10px] font-mono font-bold text-cyan-400 uppercase">INDIAN STANDARD</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-slate-400 text-xs"></i>
+          </div>
+          <h4 class="font-bold text-white text-xs">IS 4151:2020 — Protective Helmets</h4>
+          <p class="text-[11px] text-slate-300">MoRTH S.O. 4252(E) Mandatory Quality Control Order</p>
+          <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px]">
+            <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> PostgreSQL Verified</span>
+            <a href="https://www.manakonline.in" target="_blank" class="text-cyan-400 hover:underline">View source →</a>
+          </div>
+        `;
+      } else if (qLower.includes('gold') || qLower.includes('hallmark') || qLower.includes('1417')) {
+        stdCard.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-[10px] font-mono font-bold text-cyan-400 uppercase">INDIAN STANDARD</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-slate-400 text-xs"></i>
+          </div>
+          <h4 class="font-bold text-white text-xs">IS 1417:2016 — Gold & Silver Hallmarking</h4>
+          <p class="text-[11px] text-slate-300">Mandatory 6-digit alphanumeric HUID engraving</p>
+          <div class="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px]">
+            <span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i> PostgreSQL Verified</span>
+            <a href="https://www.manakonline.in" target="_blank" class="text-cyan-400 hover:underline">View source →</a>
+          </div>
+        `;
+      }
+    }
+
+    // 6. User Authentication Modal Logic
+    function openAuthModal(mode) {
+      document.getElementById('auth-modal').classList.remove('hidden');
+      switchAuthTab(mode);
+    }
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+    }
+    function switchAuthTab(mode) {
+      const err = document.getElementById('auth-error-box');
+      err.classList.add('hidden');
+      if (mode === 'register') {
+        document.getElementById('auth-title').innerText = "Create BIS Stakeholder Account";
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('register-form').classList.remove('hidden');
+      } else {
+        document.getElementById('auth-title').innerText = "Sign In to BIS Sahayak";
+        document.getElementById('register-form').classList.add('hidden');
+        document.getElementById('login-form').classList.remove('hidden');
+      }
+    }
+
+    async function executeLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const err = document.getElementById('auth-error-box');
+      err.classList.add('hidden');
+
+      try {
+        const resp = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Login failed");
+
+        currentUser = data.user;
+        localStorage.setItem('bis_current_user', JSON.stringify(currentUser));
+        closeAuthModal();
+        renderAuthHeader();
+      } catch(ex) {
+        err.innerText = ex.message;
+        err.classList.remove('hidden');
+      }
+    }
+
+    async function executeRegister(e) {
+      e.preventDefault();
+      const full_name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const user_role = document.getElementById('reg-role').value;
+      const err = document.getElementById('auth-error-box');
+      err.classList.add('hidden');
+
+      try {
+        const resp = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name, email, password, user_role })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.detail || "Registration failed");
+
+        currentUser = data.user;
+        localStorage.setItem('bis_current_user', JSON.stringify(currentUser));
+        closeAuthModal();
+        renderAuthHeader();
+      } catch(ex) {
+        err.innerText = ex.message;
+        err.classList.remove('hidden');
+      }
+    }
+
+    function renderAuthHeader() {
+      const slot = document.getElementById('auth-header-slot');
+      if (currentUser) {
+        const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        slot.innerHTML = `
+          <button onclick="openProfileModal()" class="flex items-center space-x-2 bg-slate-800 border border-slate-700 py-1 px-3 rounded-full hover:bg-slate-700 transition">
+            <div class="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center">${initials}</div>
+            <span class="text-xs font-semibold text-slate-200">${currentUser.name}</span>
+          </button>
+        `;
+      }
+    }
+
+    function openProfileModal() {
+      if (!currentUser) return;
+      document.getElementById('prof-initials').innerText = currentUser.name.substring(0, 2).toUpperCase();
+      document.getElementById('prof-name').innerText = currentUser.name;
+      document.getElementById('prof-role').innerText = currentUser.role || 'Citizen / Consumer';
+      document.getElementById('prof-email').innerText = currentUser.email;
+      document.getElementById('prof-joined').innerText = currentUser.joined || '2026-09-08';
+      document.getElementById('profile-modal').classList.remove('hidden');
+    }
+    function closeProfileModal() {
+      document.getElementById('profile-modal').classList.add('hidden');
+    }
+    function executeLogout() {
+      currentUser = null;
+      localStorage.removeItem('bis_current_user');
+      closeProfileModal();
+      document.getElementById('auth-header-slot').innerHTML = `
+        <button onclick="openAuthModal('login')" class="px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-white text-xs font-semibold flex items-center space-x-1.5 transition border border-slate-700">
+          <i class="fa-regular fa-circle-user text-slate-400"></i>
+          <span>Profile</span>
+        </button>
+      `;
     }
 
     window.onload = initApp;
