@@ -1,0 +1,670 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BIS Sahayak AI — Standards, Compliance & Lab Locator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .prose p { margin-bottom: 0.75rem; }
+    .prose ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 0.75rem; }
+    .prose ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 0.75rem; }
+    .prose h3 { font-weight: 700; font-size: 1.15rem; margin-top: 1rem; margin-bottom: 0.5rem; color: #1e3a8a; }
+    .prose h4 { font-weight: 600; font-size: 1rem; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body class="bg-slate-100 h-screen flex overflow-hidden">
+
+  <!-- SIDEBAR: CHAT HISTORY -->
+  <aside id="sidebar" class="w-72 bg-slate-900 text-slate-200 flex flex-col transition-all duration-300 z-30 shadow-xl flex-shrink-0">
+    <!-- Header -->
+    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow">
+          🏛️
+        </div>
+        <span class="font-bold text-sm tracking-wide text-white">BIS Sahayak</span>
+      </div>
+      <button onclick="startNewChat()" title="Start New Chat" class="p-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs px-2.5 flex items-center space-x-1 transition shadow">
+        <i class="fa-solid fa-plus"></i>
+        <span>New</span>
+      </button>
+    </div>
+
+    <!-- Location Status -->
+    <div class="p-3 bg-slate-800/60 border-b border-slate-800 text-xs">
+      <div class="flex items-center justify-between text-slate-300 mb-1">
+        <span class="font-medium flex items-center space-x-1">
+          <i class="fa-solid fa-location-dot text-red-400"></i>
+          <span>Manufacturer Location:</span>
+        </span>
+      </div>
+      <div id="location-badge" class="text-[11px] text-slate-400 flex items-center justify-between">
+        <span id="location-text">Not Detected</span>
+        <button onclick="detectLocation()" class="text-blue-400 hover:text-blue-300 underline font-medium">Detect</button>
+      </div>
+    </div>
+
+    <!-- Past Sessions -->
+    <div class="flex-1 overflow-y-auto p-3 space-y-1.5" id="chat-sessions-list"></div>
+
+    <!-- Footer -->
+    <div class="p-3 border-t border-slate-800 text-xs flex justify-between items-center text-slate-400">
+      <span>Saved Locally</span>
+      <button onclick="clearAllChats()" class="text-red-400 hover:text-red-300 text-xs flex items-center space-x-1">
+        <i class="fa-solid fa-trash-can"></i>
+        <span>Clear All</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CHAT VIEW -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden bg-white">
+    
+    <!-- Top Bar with User Profile / Login -->
+    <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm z-10">
+      <div class="flex items-center space-x-3">
+        <button onclick="toggleSidebar()" class="text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 lg:hidden">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div>
+          <h1 class="font-bold text-slate-800 text-base flex items-center space-x-2">
+            <span><bold>BIS-Sahayak</bold></span>
+          </h1>
+          <p class="text-xs text-slate-500">Official Bureau of Indian Standards Intelligence & Proximity Directory</p>
+        </div>
+      </div>
+
+      <!-- Header Right: Location Pill & User Profile Button -->
+      <div class="flex items-center space-x-3">
+        <button onclick="detectLocation()" id="header-loc-pill" class="hidden sm:flex items-center space-x-2 bg-slate-100 hover:bg-blue-50 border border-slate-200 text-slate-700 hover:text-blue-700 text-xs px-3 py-1.5 rounded-full transition shadow-sm">
+          <i class="fa-solid fa-crosshairs text-blue-600"></i>
+          <span id="header-loc-text">Locate Nearest Labs</span>
+        </button>
+
+        <!-- Dynamic User Button (Sign In OR Profile Avatar) -->
+        <div id="auth-header-container">
+          <button onclick="openAuthModal('login')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center space-x-1.5 transition shadow">
+            <i class="fa-solid fa-user-lock"></i>
+            <span>Sign In</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Chat Messages Container -->
+    <main id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50"></main>
+
+    <!-- Typing Indicator -->
+    <div id="typing-indicator" class="hidden px-6 py-2 bg-slate-50 text-slate-500 text-xs flex items-center space-x-2">
+      <div class="flex space-x-1">
+        <div class="w-2 h-2 rounded-full bg-blue-500 animate-bounce"></div>
+        <div class="w-2 h-2 rounded-full bg-blue-500 animate-bounce [animation-delay:0.2s]"></div>
+        <div class="w-2 h-2 rounded-full bg-blue-500 animate-bounce [animation-delay:0.4s]"></div>
+      </div>
+      <span>Querying PostgreSQL database and synthesizing answer...</span>
+    </div>
+
+    <!-- Input Footer -->
+    <footer class="p-4 bg-white border-t border-slate-200">
+      <form id="chat-form" onsubmit="handleSend(event)" class="max-w-4xl mx-auto flex items-center space-x-2">
+        <button type="button" onclick="detectLocation()" title="Use GPS Location for nearby labs" class="p-3 text-slate-500 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-xl border border-slate-200 transition">
+          <i class="fa-solid fa-location-crosshairs text-base"></i>
+        </button>
+        <input 
+          id="user-input"
+          type="text" 
+          placeholder="Ask about Indian Standards, clauses, or 'labs for testing near me'..." 
+          class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-800"
+          autocomplete="off"
+        />
+        <button 
+          type="submit" 
+          id="send-btn"
+          class="bg-blue-600 hover:bg-blue-500 text-white font-medium px-5 py-3 rounded-xl text-sm flex items-center space-x-2 transition shadow-md"
+        >
+          <span>Send</span>
+          <i class="fa-solid fa-paper-plane text-xs"></i>
+        </button>
+      </form>
+    </footer>
+  </div>
+
+  <!-- ==================== AUTH & PROFILE MODALS ==================== -->
+
+  <!-- AUTH MODAL (LOGIN & REGISTER) -->
+  <div id="auth-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
+      <!-- Modal Header -->
+      <div class="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">🏛️</span>
+          <span id="auth-modal-title" class="font-bold text-base">Sign In to BIS Sahayak</span>
+        </div>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Auth Error Alert -->
+      <div id="auth-error-box" class="hidden mx-5 mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs"></div>
+
+      <!-- LOGIN FORM -->
+      <form id="login-form" onsubmit="handleLogin(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+          <input id="login-email" type="email" required placeholder="name@company.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+          <input id="login-password" type="password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-500" />
+        </div>
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow">
+          Sign In
+        </button>
+        <p class="text-center text-xs text-slate-500 mt-3">
+          Don't have an account? 
+          <a href="#" onclick="switchAuthTab('register')" class="text-blue-600 font-semibold hover:underline">Register here</a>
+        </p>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form id="register-form" onsubmit="handleRegister(event)" class="p-6 space-y-3 hidden">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+          <input id="reg-name" type="text" required placeholder="Enetr your name" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+          <input id="reg-email" type="email" required placeholder="xyz@gmail.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Password (Min. 6 chars)</label>
+          <input id="reg-password" type="password" required minlength="6" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Stakeholder Role</label>
+            <select id="reg-role" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-2 py-2 text-xs focus:outline-none focus:border-blue-500">
+              <option value="Manufacturer">Manufacturer</option>
+              <option value="Citizen / Consumer" selected>Citizen / Consumer</option>
+              <option value="Jeweller / AHC">Jeweller / AHC</option>
+              <option value="Testing Lab Analyst">Testing Lab Analyst</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Org / Brand (Opt.)</label>
+            <input id="reg-org" type="text" placeholder="e.g. Tata, Bisleri" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500" />
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow mt-2">
+          Create Account
+        </button>
+        <p class="text-center text-xs text-slate-500 mt-2">
+          Already registered? 
+          <a href="#" onclick="switchAuthTab('login')" class="text-blue-600 font-semibold hover:underline">Sign In</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- USER PROFILE MODAL -->
+  <div id="profile-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200">
+      <div class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-6 text-center relative">
+        <button onclick="closeProfileModal()" class="absolute top-4 right-4 text-white/80 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="w-16 h-16 rounded-full bg-white/20 text-white text-2xl font-bold flex items-center justify-center mx-auto mb-2 shadow border-2 border-white/40">
+          <span id="profile-avatar-initials">U</span>
+        </div>
+        <h3 id="profile-name" class="font-bold text-lg">User Name</h3>
+        <p id="profile-role-badge" class="text-xs bg-white/20 inline-block px-2.5 py-0.5 rounded-full mt-1 text-blue-100">Role</p>
+      </div>
+
+      <div class="p-5 space-y-3 text-sm">
+        <div class="flex justify-between border-b border-slate-100 pb-2">
+          <span class="text-slate-500 text-xs">Email</span>
+          <span id="profile-email" class="font-medium text-slate-800 text-xs">user@domain.com</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-100 pb-2">
+          <span class="text-slate-500 text-xs">Organization</span>
+          <span id="profile-org" class="font-medium text-slate-800 text-xs">-</span>
+        </div>
+        <div class="flex justify-between border-b border-slate-100 pb-2">
+          <span class="text-slate-500 text-xs">Member Since</span>
+          <span id="profile-joined" class="font-medium text-slate-800 text-xs">2026-09-08</span>
+        </div>
+        <div class="flex justify-between pb-2">
+          <span class="text-slate-500 text-xs">Verified in Database</span>
+          <span class="text-emerald-600 font-semibold text-xs flex items-center space-x-1">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Active PostgreSQL</span>
+          </span>
+        </div>
+
+        <button onclick="handleLogout()" class="w-full mt-4 bg-red-50 hover:bg-red-100 text-red-700 font-semibold py-2 rounded-xl text-xs flex items-center justify-center space-x-1.5 transition border border-red-200">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span>Log Out</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: AUTH, LOCATION & SESSIONS -->
+  <script>
+    let currentUser = null;
+    let userLocation = null;
+    let currentSessionId = null;
+    let sessions = {};
+
+    function initApp() {
+      // 1. Check logged in user
+      const savedUser = localStorage.getItem('bis_current_user');
+      if (savedUser) {
+        try { currentUser = JSON.parse(savedUser); } catch(e) {}
+      }
+      renderAuthHeader();
+
+      // 2. Load Chat Sessions
+      const savedSessions = localStorage.getItem('bis_chat_sessions');
+      if (savedSessions) {
+        try { sessions = JSON.parse(savedSessions); } catch(e) { sessions = {}; }
+      }
+      
+      const sessionIds = Object.keys(sessions);
+      if (sessionIds.length > 0) {
+        currentSessionId = sessionIds[sessionIds.length - 1];
+        renderMessages();
+      } else {
+        startNewChat();
+      }
+      renderSessionList();
+      
+      // 3. Cached Location
+      const cachedLoc = localStorage.getItem('bis_user_loc');
+      if (cachedLoc) {
+        try {
+          userLocation = JSON.parse(cachedLoc);
+          updateLocationUI();
+        } catch(e) {}
+      }
+    }
+
+    // ---------------- AUTHENTICATION UI & LOGIC ----------------
+
+    function renderAuthHeader() {
+      const container = document.getElementById('auth-header-container');
+      if (currentUser) {
+        const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        container.innerHTML = `
+          <button onclick="openProfileModal()" class="flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 py-1 px-3 rounded-full transition shadow-sm">
+            <div class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
+              ${initials}
+            </div>
+            <span class="text-xs font-semibold text-slate-700 max-w-[100px] truncate">${currentUser.name}</span>
+          </button>
+        `;
+      } else {
+        container.innerHTML = `
+          <button onclick="openAuthModal('login')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl flex items-center space-x-1.5 transition shadow">
+            <i class="fa-solid fa-user-lock"></i>
+            <span>Sign In</span>
+          </button>
+        `;
+      }
+    }
+
+    function openAuthModal(mode) {
+      document.getElementById('auth-error-box').classList.add('hidden');
+      document.getElementById('auth-modal').classList.remove('hidden');
+      switchAuthTab(mode);
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+    }
+
+    function switchAuthTab(mode) {
+      document.getElementById('auth-error-box').classList.add('hidden');
+      const title = document.getElementById('auth-modal-title');
+      const loginForm = document.getElementById('login-form');
+      const regForm = document.getElementById('register-form');
+
+      if (mode === 'register') {
+        title.innerText = "Create BIS Stakeholder Account";
+        loginForm.classList.add('hidden');
+        regForm.classList.remove('hidden');
+      } else {
+        title.innerText = "Sign In to BIS Sahayak";
+        regForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errorBox = document.getElementById('auth-error-box');
+      errorBox.classList.add('hidden');
+
+      try {
+        const resp = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          throw new Error(data.detail || "Login failed");
+        }
+
+        currentUser = data.user;
+        localStorage.setItem('bis_current_user', JSON.stringify(currentUser));
+        closeAuthModal();
+        renderAuthHeader();
+      } catch(err) {
+        errorBox.innerText = err.message;
+        errorBox.classList.remove('hidden');
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const full_name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const user_role = document.getElementById('reg-role').value;
+      const organization_name = document.getElementById('reg-org').value.trim();
+      const errorBox = document.getElementById('auth-error-box');
+      errorBox.classList.add('hidden');
+
+      try {
+        const resp = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name, email, password, user_role, organization_name })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          throw new Error(data.detail || "Registration failed");
+        }
+
+        currentUser = data.user;
+        localStorage.setItem('bis_current_user', JSON.stringify(currentUser));
+        closeAuthModal();
+        renderAuthHeader();
+      } catch(err) {
+        errorBox.innerText = err.message;
+        errorBox.classList.remove('hidden');
+      }
+    }
+
+    function openProfileModal() {
+      if (!currentUser) return;
+      const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      document.getElementById('profile-avatar-initials').innerText = initials;
+      document.getElementById('profile-name').innerText = currentUser.name;
+      document.getElementById('profile-role-badge').innerText = currentUser.role || 'Citizen / Consumer';
+      document.getElementById('profile-email').innerText = currentUser.email;
+      document.getElementById('profile-org').innerText = currentUser.organization || 'Independent';
+      document.getElementById('profile-joined').innerText = currentUser.joined || 'Active';
+      document.getElementById('profile-modal').classList.remove('hidden');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-modal').classList.add('hidden');
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('bis_current_user');
+      closeProfileModal();
+      renderAuthHeader();
+    }
+
+    // ---------------- CHAT SESSIONS & MESSAGES ----------------
+
+    function saveSessions() {
+      localStorage.setItem('bis_chat_sessions', JSON.stringify(sessions));
+    }
+
+    function startNewChat() {
+      currentSessionId = 'session_' + Date.now();
+      sessions[currentSessionId] = {
+        title: 'New Inquiry',
+        createdAt: new Date().toISOString(),
+        messages: []
+      };
+      saveSessions();
+      renderSessionList();
+      renderMessages();
+    }
+
+    function clearAllChats() {
+      if (confirm('Clear all conversation history?')) {
+        sessions = {};
+        localStorage.removeItem('bis_chat_sessions');
+        startNewChat();
+      }
+    }
+
+    function switchSession(id) {
+      if (sessions[id]) {
+        currentSessionId = id;
+        renderSessionList();
+        renderMessages();
+      }
+    }
+
+    function renderSessionList() {
+      const listEl = document.getElementById('chat-sessions-list');
+      listEl.innerHTML = '';
+      
+      const keys = Object.keys(sessions).reverse();
+      keys.forEach(id => {
+        const s = sessions[id];
+        const isActive = id === currentSessionId;
+        const div = document.createElement('div');
+        div.className = `p-2.5 rounded-lg cursor-pointer text-xs flex items-center justify-between transition ${
+          isActive ? 'bg-blue-700/60 text-white font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+        }`;
+        div.onclick = () => switchSession(id);
+        
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'truncate max-w-[170px]';
+        titleSpan.innerText = s.title || 'Conversation';
+
+        const icon = document.createElement('i');
+        icon.className = 'fa-regular fa-message text-[10px] opacity-60';
+
+        div.appendChild(titleSpan);
+        div.appendChild(icon);
+        listEl.appendChild(div);
+      });
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('chat-messages');
+      container.innerHTML = '';
+
+      const session = sessions[currentSessionId];
+      if (!session || session.messages.length === 0) {
+        container.innerHTML = `
+          <div class="flex items-start space-x-3 max-w-3xl">
+            <div class="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-sm shadow flex-shrink-0">
+              🏛️
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm text-slate-800 text-sm leading-relaxed prose">
+              <p><strong>Namaste! I am BIS Sahayak AI.</strong></p>
+              <p>I can help you navigate Indian Standards, Mandatory QCOs, Scheme certification, and <strong>find testing laboratories near your factory with exact distances</strong>.</p>
+              <div class="mt-3 flex flex-wrap gap-2 not-prose">
+                <button onclick="askPreset('Which labs near me can test drinking water for IS 10500?')" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium px-3 py-1.5 rounded-lg border border-blue-200 transition">
+                  💧 Nearest Water Testing Labs
+                </button>
+                <button onclick="askPreset('Where can I test two-wheeler helmets near me for IS 4151?')" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 font-medium px-3 py-1.5 rounded-lg border border-amber-200 transition">
+                  🪖 Nearest Helmet Testing Labs
+                </button>
+                <button onclick="askPreset('Verify Gold Hallmarking 6-digit HUID rules')" class="text-xs bg-yellow-50 hover:bg-yellow-100 text-yellow-800 font-medium px-3 py-1.5 rounded-lg border border-yellow-200 transition">
+                  🏅 Gold Hallmarking HUID
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      session.messages.forEach(msg => {
+        appendMessageUI(msg.role, msg.text, false);
+      });
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function appendMessageUI(role, text, shouldScroll = true) {
+      const container = document.getElementById('chat-messages');
+      const isUser = role === 'user';
+      
+      const row = document.createElement('div');
+      row.className = `flex items-start space-x-3 ${isUser ? 'justify-end' : 'justify-start max-w-3xl'}`;
+
+      if (!isUser) {
+        row.innerHTML = `
+          <div class="w-8 h-8 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-sm shadow flex-shrink-0">🏛️</div>
+          <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-4 shadow-sm text-slate-800 text-sm leading-relaxed prose">${marked.parse(text)}</div>
+        `;
+      } else {
+        row.innerHTML = `
+          <div class="bg-blue-600 text-white rounded-2xl rounded-tr-none px-4 py-3 shadow-sm text-sm max-w-xl leading-relaxed">${text}</div>
+          <div class="w-8 h-8 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center font-bold text-xs shadow flex-shrink-0">👤</div>
+        `;
+      }
+
+      container.appendChild(row);
+      if (shouldScroll) container.scrollTop = container.scrollHeight;
+    }
+
+    // ---------------- LOCATION ACCESS ----------------
+
+    function detectLocation() {
+      if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
+      }
+
+      document.getElementById('location-text').innerText = "Locating GPS...";
+      document.getElementById('header-loc-text').innerText = "Detecting GPS...";
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          userLocation = { latitude: lat, longitude: lon, city: '', state: '' };
+
+          try {
+            const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+            const data = await resp.json();
+            const addr = data.address || {};
+            userLocation.city = addr.city || addr.town || addr.district || addr.state_district || 'Near User';
+            userLocation.state = addr.state || 'India';
+          } catch(e) {
+            userLocation.city = 'Detected Location';
+            userLocation.state = 'India';
+          }
+
+          localStorage.setItem('bis_user_loc', JSON.stringify(userLocation));
+          updateLocationUI();
+        },
+        (error) => {
+          console.warn("Location error:", error);
+          document.getElementById('location-text').innerText = "Permission Denied";
+          document.getElementById('header-loc-text').innerText = "Location Off";
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    }
+
+    function updateLocationUI() {
+      if (userLocation && userLocation.city) {
+        const text = `📍 ${userLocation.city}, ${userLocation.state}`;
+        document.getElementById('location-text').innerText = text;
+        document.getElementById('header-loc-text').innerText = text;
+        document.getElementById('header-loc-pill').classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+      }
+    }
+
+    // ---------------- SEND MESSAGE ----------------
+
+    async function handleSend(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('user-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+
+      const session = sessions[currentSessionId];
+      if (session.messages.length === 0) {
+        session.title = text.length > 25 ? text.substring(0, 25) + '...' : text;
+        renderSessionList();
+      }
+
+      session.messages.push({ role: 'user', text: text });
+      appendMessageUI('user', text);
+      saveSessions();
+
+      document.getElementById('typing-indicator').classList.remove('hidden');
+
+      const historyPayload = session.messages.slice(0, -1).map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        text: m.text
+      }));
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history: historyPayload,
+            location: userLocation
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById('typing-indicator').classList.add('hidden');
+
+        if (data.success) {
+          session.messages.push({ role: 'model', text: data.reply });
+          appendMessageUI('model', data.reply);
+          saveSessions();
+        } else {
+          appendMessageUI('model', '⚠️ Unable to process request. Please check server connection.');
+        }
+      } catch (err) {
+        document.getElementById('typing-indicator').classList.add('hidden');
+        appendMessageUI('model', `⚠️ Error connecting to server: ${err.message}`);
+      }
+    }
+
+    function askPreset(query) {
+      document.getElementById('user-input').value = query;
+      handleSend();
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('-translate-x-full');
+    }
+
+    window.onload = initApp;
+  </script>
+</body>
+</html>

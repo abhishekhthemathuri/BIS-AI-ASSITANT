@@ -1,19 +1,22 @@
 ﻿import os
 from pathlib import Path
 import uvicorn
+import bcrypt
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from dotenv import load_dotenv
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 from google import genai
 from google.genai import types
 
 from knowledge_base import retrieve_relevant_context, BIS_STANDARDS, BIS_SCHEMES, BIS_TESTING_LABS
-from postgres_rag import query_bis_postgres
+from postgres_rag import query_bis_postgres, get_db_connection
 
 env_path = Path(__file__).resolve().parent / '.env'
 load_dotenv(dotenv_path=env_path)
@@ -44,18 +47,128 @@ app.add_middleware(
 )
 
 SYSTEM_INSTRUCTION = """
-You are "BIS Sahayak", an authoritative AI Consultant for the Bureau of Indian Standards (BIS), Ministry of Consumer Affairs, Food & Public Distribution, Government of India.
+You are "BIS Sahayak", an authoritative Senior AI Consultant for the Bureau of Indian Standards (BIS), Ministry of Consumer Affairs, Food & Public Distribution, Government of India.
 
-Core Responsibilities:
-1. Answer questions from consumers, manufacturers, jewellers, and citizens regarding Indian Standards (IS codes), Quality Control Orders (QCOs), Conformity Assessment Schemes, and Laboratory Testing.
-2. When users/manufacturers ask for labs near them, ALWAYS prioritize the nearest testing laboratories provided in the PostgreSQL grounded context, citing their distance in kilometers, full addresses, phone numbers, and testing capabilities.
-3. Distinguish clearly between:
-   - Scheme I (Standard ISI Mark for domestic manufacturers)
-   - Scheme II (Compulsory Registration Scheme - CRS for electronics/IT)
-   - Scheme IV (Foreign Manufacturers Certification Scheme - FMCS)
-   - Hallmarking (6-digit alphanumeric HUID on Gold/Silver)
-4. Format your output with clean Markdown headings, bullet points, distance highlights, and contact information.
+Core Principles:
+1. NEVER cut off responses. Always complete every step, list item, and concluding advice.
+2. When a manufacturer or user asks for a step-by-step guide or how to get a license / ISI Mark, ALWAYS provide the FULL, EXHAUSTIVE 6-Step procedure from start to final Grant of License:
+   - Step 1: In-House Laboratory & Plant Infrastructure Setup (Machinery, in-house testing equipment, qualified chemist/microbiologist).
+   - Step 2: Documentation & Application Submission on Manakonline (Form-V, factory layout, machinery list, calibration certificates).
+   - Step 3: Preliminary Factory Inspection by BIS Inspecting Officer (verification of manufacturing process, quality control & hygienic conditions).
+   - Step 4: Sample Drawing & Counter-Testing (drawing of independent samples for testing at BIS Central/Regional or NABL lab).
+   - Step 5: Test Report Scrutiny & Marking Fee Payment (compliance verification and annual minimum marking fee remittance).
+   - Step 6: Grant of License (CM/L number) & Usage of Standard ISI Mark.
+3. For laboratory testing inquiries, ALWAYS prioritize the nearest testing laboratories provided in the PostgreSQL grounded context, citing their distance in kilometers, full addresses, phone numbers, and testing capabilities.
+4. Distinguish clearly between Scheme I (ISI Mark for domestic manufacturers), Scheme II (CRS for IT/electronics), Scheme IV (FMCS for foreign factories), and Hallmarking (6-digit HUID).
+5. Format your output with clear Markdown headings, bold key terms, and bullet points.
 """
+
+# ----------------- AUTH MODELS & ENDPOINTS -----------------
+
+class RegisterRequest(BaseModel):
+    full_name: str
+    email: str
+    password: str
+    user_role: Optional[str] = "Citizen / Consumer"
+    organization_name: Optional[str] = ""
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post("/api/auth/register")
+def register_user(req: RegisterRequest):
+    email_clean = req.email.strip().lower()
+    if "@" not in email_clean or "." not in email_clean:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+
+    if len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed.")
+
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT user_id FROM users WHERE email = %s;", (email_clean,))
+        if cur.fetchone():
+            raise HTTPException(status_code=400, detail="An account with this email already exists.")
+
+        salt = bcrypt.gensalt()
+        hashed_pw = bcrypt.hashpw(req.password.encode('utf-8'), salt).decode('utf-8')
+
+        cur.execute("""
+            INSERT INTO users (full_name, email, password_hash, user_role, organization_name)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING user_id, full_name, email, user_role, organization_name, created_at;
+        """, (req.full_name.strip(), email_clean, hashed_pw, req.user_role, req.organization_name))
+
+        new_user = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return {
+            "success": True,
+            "message": "Registration successful!",
+            "user": {
+                "id": str(new_user["user_id"]),
+                "name": new_user["full_name"],
+                "email": new_user["email"],
+                "role": new_user["user_role"],
+                "organization": new_user["organization_name"] or "Independent",
+                "joined": str(new_user["created_at"])[:10]
+            }
+        }
+    except HTTPException as he:
+        conn.close()
+        raise he
+    except Exception as e:
+        conn.close()
+        raise HTTPException(status_code=500, detail=f"Registration error: {str(e)}")
+
+@app.post("/api/auth/login")
+def login_user(req: LoginRequest):
+    email_clean = req.email.strip().lower()
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed.")
+
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT user_id, full_name, email, password_hash, user_role, organization_name, created_at
+            FROM users WHERE email = %s;
+        """, (email_clean,))
+        user = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+        if not bcrypt.checkpw(req.password.encode('utf-8'), user["password_hash"].encode('utf-8')):
+            raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+        return {
+            "success": True,
+            "message": "Login successful!",
+            "user": {
+                "id": str(user["user_id"]),
+                "name": user["full_name"],
+                "email": user["email"],
+                "role": user["user_role"],
+                "organization": user["organization_name"] or "Independent",
+                "joined": str(user["created_at"])[:10]
+            }
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Login error: {str(e)}")
+
+# ----------------- CHAT & RAG ENDPOINTS -----------------
 
 class ChatMessage(BaseModel):
     role: str
@@ -83,10 +196,8 @@ async def chat_with_bis_assistant(request: ChatRequest):
     if not user_query:
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
-    # 1. Extract location dict if supplied
     loc_dict = request.location.dict() if request.location else None
 
-    # 2. Dual Retrieval (PostgreSQL with Proximity + Static Knowledge Base)
     db_context = query_bis_postgres(user_query, user_location=loc_dict)
     static_context = retrieve_relevant_context(user_query)
 
@@ -130,13 +241,14 @@ async def chat_with_bis_assistant(request: ChatRequest):
     last_error = None
     for model_name in CANDIDATE_MODELS:
         try:
+            # INCREASED TO 4096 TOKENS (No more cut-offs!)
             response = client.models.generate_content(
                 model=model_name,
                 contents=formatted_contents,
                 config=types.GenerateContentConfig(
                     system_instruction=augmented_system_prompt,
                     temperature=0.2,
-                    max_output_tokens=1500,
+                    max_output_tokens=4096,
                 )
             )
 
