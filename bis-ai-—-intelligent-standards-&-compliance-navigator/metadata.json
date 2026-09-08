@@ -1,0 +1,6 @@
+{
+  "name": "BIS AI — Intelligent Standards & Compliance Navigator",
+  "description": "Intelligent Indian Standards (IS codes), BIS certification, QCO compliance, testing laboratories, and hallmarking navigator powered by AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
